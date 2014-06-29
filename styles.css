@@ -1,0 +1,16 @@
+/** General display rules **/
+.block_exam_actions .block_tree {margin:5px;padding-left:0px;overflow:visible;}
+.block_exam_actions .block_tree li {margin:3px;list-style: none;padding:0;}
+.block_exam_actions .block_tree li.item_with_icon > p {position:relative; padding-left: 21px;}
+.block_exam_actions .block_tree li.item_with_icon > p img,
+.block_exam_actions .block_tree .type_activity > p.tree_item.active_tree_node img,
+.block_exam_actions .block_tree li > p.hasicon img {vertical-align:middle;position:absolute;left:0;top:-1px;width:16px;height:16px;}
+.block_exam_actions .block_tree li.item_with_icon.contains_branch > p img {left:16px;}
+.block_exam_actions .block_tree .type_activity > p.branch.hasicon,
+.block_exam_actions .block_tree .type_activity > p.emptybranch.hasicon,
+.block_exam_actions .block_tree li.item_with_icon.contains_branch > .tree_item {padding-left:37px;}
+
+.block_exam_actions .block_tree li ul {padding-left:0;margin:0;}
+.block_exam_actions .block_tree li.depth_2 ul {padding-left:16px;margin:0;}
+
+.block_exam_actions .computer_released {color: DarkGreen;}
