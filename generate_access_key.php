@@ -84,6 +84,8 @@ if ($editform->is_cancelled()) {
     echo html_writer::tag('h2', get_string('generating_access_key', 'block_exam_actions'));
     echo "<br/>";
 
+    echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
     $editform->display();
+    echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
 }

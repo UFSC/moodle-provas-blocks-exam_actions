@@ -68,8 +68,10 @@ if (optional_param('add', 0, PARAM_BOOL)) {
     exit;
 }
 
-echo html_writer::tag('h2', get_string('remote_courses', 'block_exam_actions'));
-echo html_writer::empty_tag('BR');
+echo $OUTPUT->heading(get_string('remote_courses', 'block_exam_actions'));
+echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
+echo get_string('remote_courses_msg', 'block_exam_actions');
+echo $OUTPUT->box_end();
 
 $moodles = $DB->get_records('exam_authorization', null, '', 'identifier, description, id');
 if(empty($SESSION->exam_remote_courses)) {

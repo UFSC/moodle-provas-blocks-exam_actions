@@ -6,6 +6,8 @@ $string['exam_actions:myaddinstance'] = 'Adiciona um novo bloco exam_actions à 
 $string['title'] = 'Moodle Provas';
 
 $string['remote_courses'] = 'Cursos remotos';
+$string['remote_courses_msg'] = 'Abaixo está a relação de cursos das instalações remotos de Moodle ligadados ao Moodle Provas.
+    Clique no nome do curso para ter acesso a ele (caso já está disponível no Moodle Provas) ou para disponibilizá-lo.';
 $string['export_exam'] = 'Exportar prova';
 $string['access_key'] = 'Chave de acesso';
 $string['new_access_key'] = 'Nova chave de acesso';
@@ -35,4 +37,8 @@ $string['verify_client_host'] = 'Restrigir uso à rede local';
 $string['verify_client_host_help'] = 'Verificar se o computador onde será utilizada a chave de acesso está na mesma rede do computador onde a chave foi gerada.';
 
 $string['empty_course'] = 'É necessário selecionar o curso para o qual a chave de acesso é válida';
+
+$string['cd_needed'] = 'É necessário utilizar o CD (ou pendrive) de provas para que este computador possa ser liberado para realizar uma prova.';
+$string['invalid_cd_version'] = 'A versão do CD (ou pendrive) de provas é inválida ou muito antiga.';
+$string['out_of_student_ip_ranges'] = 'Este computador não pode ser utilizado para realizar uma prova pois seu número IP está fora da faixa de IPs permitidos.';
 ?>

@@ -21,9 +21,20 @@
 
 require('../../config.php');
 require_once('release_computer_form.php');
+require_once($CFG->dirroot . '/local/exam_authorization/classes/exam_authorization.php');
 
 $baseurl = new moodle_url('/blocks/exam_actions/release_computer.php');
 $returnurl = new moodle_url('/');
+
+if(!\local\exam_authorization::check_ip_header(false) || !\local\exam_authorization::check_network_header(false)) {
+    print_error('cd_needed', 'block_exam_actions', $returnurl);
+}
+if(!\local\exam_authorization::check_version_header(false)) {
+    print_error('invalid_cd_version', 'block_exam_actions', $returnurl);
+}
+if(!\local\exam_authorization::check_ip_range_student(false)) {
+    print_error('out_of_student_ip_ranges', 'block_exam_actions', $returnurl);
+}
 
 if($key = optional_param('key', '', PARAM_TEXT)) {
     if (!$access_key = $DB->get_record('exam_access_keys', array('access_key' => $key))) {

@@ -33,7 +33,6 @@ class generate_access_key_form extends moodleform {
 
         $buttons = array();
         $buttons[] = &$mform->createElement('submit', 'generate', get_string('generate_access_key', 'block_exam_actions'));
-        $buttons[] = &$mform->createElement('submit', 'release', get_string('release_computer', 'block_exam_actions'));
         $buttons[] = &$mform->createElement('cancel');
         $mform->addGroup($buttons, 'buttons', '', array(' '), false);
         $mform->closeHeaderBefore('buttons');
