@@ -3,12 +3,12 @@
 require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir . '/coursecatlib.php');
 require_once($CFG->dirroot . '/course/lib.php');
-require_once($CFG->dirroot . '/local/exam_authorization/classes/exam_authorization.php');
+require_once($CFG->dirroot . '/user/lib.php');
 
 function exam_add_course($identifier, $remote_course) {
     global $DB;
 
-    $moodle = \local\exam_authorization::get_moodle($identifier);
+    $moodle = \local_exam_authorization\authorization::get_moodle($identifier);
     if(!$parent = $DB->get_field('course_categories', 'id', array('idnumber'=> $identifier))) {
         $new_cat = new StdClass();
         $new_cat->name = $moodle->description;
@@ -60,7 +60,7 @@ function exam_enrol_user($userid, $courseid, $role_shortname) {
     }
 }
 
-function exam_enrol_students($identifier, $shortname, $courseid) {
+function exam_add_students($identifier, $shortname) {
     global $DB, $CFG;
 
     if(!$roleid = $DB->get_field('role', 'id', array('shortname'=>'student'))) {
@@ -75,6 +75,7 @@ function exam_enrol_students($identifier, $shortname, $courseid) {
     foreach($students AS $student) {
         if($user = $DB->get_record('user', array('username'=> $student->username), 'id,auth,password,'.implode(',', $user_fields))) {
             $update = false;
+            $update_password = false;
             foreach($user_fields AS $field) {
                 if( $user->$field != $student->$field) {
                     $user->$field = $student->$field;
@@ -84,30 +85,27 @@ function exam_enrol_students($identifier, $shortname, $courseid) {
             if($user->auth == $student->auth) {
                 if($user->password != $student->password) {
                     $user->password = $student->password;
-                    $update = true;
+                    $update_password = true;
                 }
             } else {
                 if(in_array($student->auth, $auth_enabled)) {
                     $user->auth     = $student->auth;
                     $user->password = $student->password;
-                    $update = true;
+                    $update_password = true;
                 }
             }
 
-            if($update) {
-                $user->timemodified = time();
-                $DB->update_record('user', $user);
+            if($update || $update_password) {
+                user_update_user($user, $update_password);
             }
         } else {
             if(!in_array($student->auth, $auth_enabled)) {
                 $student->auth = 'manual';
             }
-            $student->timecreated    = time();
-            $student->timemodified   = time();
             $student->confirmed      = 1;
             $student->mnethostid     = $CFG->mnet_localhost_id;
             $student->lang           = $CFG->lang;
-            $DB->insert_record('user', $student);
+            user_create_user($student, true);
         }
     }
 }
@@ -168,7 +166,7 @@ function exam_build_category_tree($identifier) {
     }
 
     $courses = array();
-    foreach($SESSION->exam_remote_courses[$identifier] AS $c) {
+    foreach($SESSION->exam_courses[$identifier] AS $c) {
         if(!isset($courses[$c->categoryid])) {
             $courses[$c->categoryid] = array();
         }
@@ -204,7 +202,7 @@ function exam_get_students($identifier, $course_shortname) {
     $function = 'local_exam_remote_get_students';
     $params = array('shortname'=>$course_shortname);
 
-    return \local\exam_authorization::call_remote_function($identifier, $function, $params);
+    return \local_exam_authorization\authorization::call_remote_function($identifier, $function, $params);
 }
 
 function exam_get_remote_categories($identifier=null) {
@@ -213,22 +211,22 @@ function exam_get_remote_categories($identifier=null) {
     $function = 'local_exam_remote_get_categories';
 
     if($identifier == null) {
-        $moodles = \local\exam_authorization::get_moodle();
+        $moodles = \local_exam_authorization\authorization::get_moodle();
     } else {
-        $moodles = array($identifier=>\local\exam_authorization::get_moodle($identifier));
+        $moodles = array($identifier=>\local_exam_authorization\authorization::get_moodle($identifier));
     }
 
     $remote_categories = array();
     foreach($moodles AS $ident=>$m) {
 
         $rcatids = array();
-        foreach($SESSION->exam_remote_courses[$ident] AS $c) {
+        foreach($SESSION->exam_courses[$ident] AS $c) {
             $rcatids[$c->categoryid] = true;
         }
 
         $params = array('categoryids'=>array_keys($rcatids));
 
-        $rcats = \local\exam_authorization::call_remote_function($ident, $function, $params);
+        $rcats = \local_exam_authorization\authorization::call_remote_function($ident, $function, $params);
         $remote_categories[$ident] = array();
         foreach($rcats AS $rcat) {
             $remote_categories[$ident][$rcat->id] = $rcat;
@@ -269,11 +267,12 @@ function exam_courses_menu() {
     global $SESSION, $DB;
 
     $courses_menu = array();
-    foreach($SESSION->exam_remote_courses AS $identifier=>$rcourses) {
-        foreach($rcourses AS $rc) {
-            if(isset($rc->local_course)) {
-                if($DB->record_exists('course', array('id'=>$rc->local_course->id, 'visible'=>1))) {
-                    $courses_menu[$rc->local_course->id] = $rc->fullname;
+    foreach($SESSION->exam_courses AS $identifier=>$courses) {
+        foreach($courses AS $c) {
+            if(in_array('proctor', $c->functions)) {
+                $shortname = "{$identifier}_{$c->shortname}";
+                if($lc = $DB->get_record('course', array('shortname'=>$shortname, 'visible'=>1), 'id, fullname')) {
+                    $courses_menu[$lc->id] = $lc->fullname;
                 }
             }
         }
@@ -281,3 +280,42 @@ function exam_courses_menu() {
     return $courses_menu;
 }
 
+function exam_export_activity($identifier, $shortname, $username, $backup_file) {
+    $function = 'local_exam_remote_restore_activity';
+    $params = array(
+        'username' => $username,
+        'shortname' => $shortname,
+        'backup_file' => $backup_file,
+        );
+
+    $return = \local_exam_authorization\authorization::call_remote_function($identifier, $function, $params);
+
+    return $return;
+    // $info =  $curl->get_info();
+    // var_dump($return); exit;
+        /*
+        if($info['http_code'] == 200) { // OK
+            $resp = json_decode($return);
+            if(is_object($resp)) {
+                if(isset($resp->message)) {
+                    return get_string('error', 'block_activities_remote_copy', $resp->message);
+                } else {
+                    return get_string('error_object', 'block_activities_remote_copy', var_export($resp, true));
+                }
+            } else {
+                if($resp == 'OK') {
+                    return $resp;
+                } else {
+                    return get_string('error_return', 'block_activities_remote_copy', $resp);
+                }
+            }
+        } else if($info['http_code'] == 404) { // Not found
+            return get_string('error_url', 'block_activities_remote_copy', $urlbase);
+        } else {
+            return get_string('error_httpcode', 'block_activities_remote_copy', $info['http_code']);
+        }
+    } catch (Exception $e) {
+        return get_string('error_exception', 'block_activities_remote_copy', $e->getMessage());
+    }
+    */
+}

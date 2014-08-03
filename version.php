@@ -15,15 +15,15 @@
  * Version details
  *
  * @package    blocks
- * @subpackage provas_access_key
- * @copyright  2012 - Antonio Carlos Mariani, Luis Henrique Mulinari
+ * @subpackage exam_actions
+ * @copyright  2014 - Antonio Carlos Mariani
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2014060700;
+$plugin->version = 2014080100;
 $plugin->requires  = 2013111800;
 $plugin->component = 'block_exam_actions'; // Full name of the plugin (used for diagnostics)
 $plugin->dependencies = array(
-    'local_exam_authorization' => 2014060700
+    'local_exam_authorization' => 2014080100
 );

@@ -20,11 +20,11 @@
  */
 
 require('../../config.php');
-require_once('locallib.php');
-require_once('generate_access_key_form.php');
+require_once(dirname(__FILE__).'/locallib.php');
+require_once(dirname(__FILE__).'/generate_access_key_form.php');
 
-if($SESSION->exam_role != 'teacher' && $SESSION->exam_role != 'monitor') {
-    print_error('no_monitor', 'block_exam_actions');
+if(!isset($SESSION->exam_functions) || !in_array('proctor', $SESSION->exam_functions)) {
+    print_error('no_proctor', 'block_exam_actions');
 }
 
 exam_courses_menu();
@@ -38,7 +38,6 @@ $PAGE->set_context($context);
 $site = get_site();
 $PAGE->set_heading($site->fullname);
 $PAGE->set_pagelayout('standard');
-
 $PAGE->navbar->add(get_string('generating_access_key', 'block_exam_actions'));
 
 $courses = exam_courses_menu();
@@ -48,40 +47,39 @@ if ($editform->is_cancelled()) {
     redirect($returnurl);
 } else if ($data = $editform->get_data()) {
     $access_key = exam_generate_access_key($data->courseid, $USER->id, $data->access_key_timeout, $data->verify_client_host);
-    if(isset($data->release)) {
-        $url = new moodle_url('/blocks/exam_actions/release_computer.php', array('access_key'=>$access_key));
-        require_logout();
-        redirect($url);
-    } else {
-        // generate and show access key
-        echo $OUTPUT->header();
-        echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
-        echo $OUTPUT->heading(get_string('access_key', 'block_exam_actions'));
+    $local_shortname = $DB->get_field('course', 'shortname', array('id'=>$data->courseid));
+    list($identifier, $shortname) = explode('_', $local_shortname, 2);
+    exam_add_students($identifier, $shortname);
 
-        $tdata = array();
-        $tdata[] = array(get_string('course'), $courses[$data->courseid]);
-        $tdata[] = array(get_string('access_key', 'block_exam_actions'), html_writer::tag('b', $access_key));
+    // generate and show access key
+    echo $OUTPUT->header();
+    echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
+    echo $OUTPUT->heading(get_string('access_key', 'block_exam_actions'));
 
-        $unity = $data->access_key_timeout == 1 ? get_string('minute') : get_string('minutes');
-        $tdata[] = array(get_string('access_key_timeout', 'block_exam_actions'), $data->access_key_timeout . ' ' . $unity);
+    $tdata = array();
+    $tdata[] = array(get_string('course'), $courses[$data->courseid]);
+    $tdata[] = array(get_string('access_key', 'block_exam_actions'), html_writer::tag('b', $access_key));
 
-        $yesno = $data->verify_client_host ? get_string('yes') : get_string('no');
-        $tdata[] = array(get_string('verify_client_host', 'block_exam_actions'), $yesno);
+    $unity = $data->access_key_timeout == 1 ? get_string('minute') : get_string('minutes');
+    $tdata[] = array(get_string('access_key_timeout', 'block_exam_actions'), $data->access_key_timeout . ' ' . $unity);
 
-        $table = new html_table();
-        $table->data = $tdata;
-        echo html_writer::table($table);
+    $yesno = $data->verify_client_host ? get_string('yes') : get_string('no');
+    $tdata[] = array(get_string('verify_client_host', 'block_exam_actions'), $yesno);
 
-        $button_new = new single_button($baseurl, get_string('new_access_key', 'block_exam_actions'));
-        $button_back = new single_button($returnurl, get_string('back'));
-        echo html_writer::tag('div', $OUTPUT->render($button_new) . $OUTPUT->render($button_back), array('class' => 'buttons'));
+    $table = new html_table();
+    $table->data = $tdata;
+    echo html_writer::table($table);
 
-        echo $OUTPUT->box_end();
-        echo $OUTPUT->footer();
-    }
+    $button_new = new single_button($baseurl, get_string('new_access_key', 'block_exam_actions'));
+    $button_back = new single_button($returnurl, get_string('back'));
+    echo html_writer::tag('div', $OUTPUT->render($button_new) . $OUTPUT->render($button_back), array('class' => 'buttons'));
+
+    echo $OUTPUT->box_end();
+    echo $OUTPUT->footer();
 } else {
     echo $OUTPUT->header();
-    echo html_writer::tag('h2', get_string('generating_access_key', 'block_exam_actions'));
+    echo $OUTPUT->heading(get_string('generating_access_key', 'block_exam_actions'));
+    echo $OUTPUT->heading(get_string('generating_access_key_title', 'block_exam_actions'), 4);
     echo "<br/>";
 
     echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');

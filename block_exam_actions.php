@@ -34,7 +34,7 @@ class block_exam_actions extends block_base {
      * @return object
      */
     public function get_content() {
-        global $USER, $CFG, $OUTPUT, $SESSION, $PAGE;
+        global $SESSION, $PAGE;
 
         if($this->content !== NULL) {
             return $this->content;
@@ -44,37 +44,40 @@ class block_exam_actions extends block_base {
         $this->content->text = '';
         $this->content->footer = '';
 
-        if(!isset($SESSION->exam_role)) {
-            if(isset($SESSION->exam_access_key)) {
-                $this->content->text = html_writer::tag('B', get_string('computer_released', 'block_exam_actions'), array('class'=>'computer_released'));
-            } else {
-                $link = html_writer::link(new moodle_url('/blocks/exam_actions/release_computer.php'), get_string('release_this_computer', 'block_exam_actions'));
-                $text = html_writer::tag('LI', $link);
-                $this->content->text = html_writer::tag('UL', $text);
-            }
+        if(isset($SESSION->exam_access_key)) {
+            $this->content->text = html_writer::tag('B', get_string('computer_released', 'block_exam_actions'), array('class'=>'computer_released'));
             return $this->content;
         }
 
-        if($SESSION->exam_role == 'student') {
-            return $this->content;
-        }
-
-        $text = '';
-        if($SESSION->exam_role == 'teacher') {
-            if(is_a($PAGE->context, 'context_user')) {
-                $link = html_writer::link(new moodle_url('/blocks/exam_actions/remote_courses.php'), get_string('remote_courses', 'block_exam_actions'));
-                $text .= html_writer::tag('LI', $link);
-            } else if(is_a($PAGE->context, 'context_course')) {
-                $link = html_writer::link(new moodle_url('/blocks/exam_actions/export_exam.php'), get_string('export_exam', 'block_exam_actions'));
-                $text .= html_writer::tag('LI', $link);
+        $links = array();
+        if(is_a($PAGE->context, 'context_course')) {
+            if($PAGE->context->instanceid == 1) {
+                $links[] = html_writer::link(new moodle_url('/blocks/exam_actions/release_computer.php'), get_string('release_this_computer', 'block_exam_actions'));
+            } else if(in_array('editor', $SESSION->exam_functions)) {
+                $links[] = html_writer::link(new moodle_url('/blocks/exam_actions/export_exam.php', array('id'=>$PAGE->context->instanceid)),
+                                             get_string('export_exam', 'block_exam_actions'));
+            }
+        } else if(is_a($PAGE->context, 'context_user')) {
+            foreach($SESSION->exam_functions AS $f) {
+                switch ($f) {
+                    case 'editor':
+                        $links[] = html_writer::link(new moodle_url('/blocks/exam_actions/remote_courses.php'), get_string('remote_courses', 'block_exam_actions'));
+                        break;
+                    case 'monitor':
+                        $links[] = html_writer::link(new moodle_url('/blocks/exam_actions/monitor_exam.php'), get_string('monitor_exam', 'block_exam_actions'));
+                        break;
+                    case 'proctor':
+                        $links[] = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php'), get_string('generate_access_key', 'block_exam_actions'));
+                        break;
+                }
             }
         }
-        if(is_a($PAGE->context, 'context_user')) {
-            $link = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php'), get_string('generate_access_key', 'block_exam_actions'));
-            $text .= html_writer::tag('LI', $link);
-        }
 
-        if(!empty($text)) {
+        if(!empty($links)) {
+            $text = '';
+            foreach($links AS $l) {
+                $text .= html_writer::tag('LI', $l);
+            }
             $this->content->text = html_writer::tag('UL', $text);
         }
 

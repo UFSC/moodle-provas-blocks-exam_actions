@@ -24,20 +24,20 @@ require_once('locallib.php');
 
 require_login();
 
-if(!isset($SESSION->exam_remote_courses)) {
+if(!isset($SESSION->exam_courses)) {
     print_error('no_remote_courses', 'block_exam_actions');
 }
 
 if(optional_param('confirmadd', 0, PARAM_INT) && confirm_sesskey()) {
     $identifier = urldecode(required_param('identifier', PARAM_TEXT));
     $shortname = urldecode(required_param('shortname', PARAM_TEXT));
-    foreach($SESSION->exam_remote_courses[$identifier] AS $c) {
+    foreach($SESSION->exam_courses[$identifier] AS $c) {
         if($c->shortname == $shortname) {
             if(!isset($c->local_course)) {
                 $course = exam_add_course($identifier, $c);
                 $c->local_course = $course;
                 exam_enrol_user($USER->id, $course->id, 'editingteacher');
-                exam_enrol_students($identifier, $shortname, $course->id);
+                exam_add_students($identifier, $shortname);
                 redirect(new moodle_url('/course/view.php', array('id'=>$course->id)));
             }
         }
@@ -73,21 +73,17 @@ echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
 echo get_string('remote_courses_msg', 'block_exam_actions');
 echo $OUTPUT->box_end();
 
-$moodles = $DB->get_records('exam_authorization', null, '', 'identifier, description, id');
-if(empty($SESSION->exam_remote_courses)) {
+if(empty($SESSION->exam_courses)) {
     echo html_writer::tag('h2', get_string('no_remote_courses', 'block_exam_actions'));
 } else {
-    $tree = exam_build_category_tree('Presencial');
-
+    $moodles = \local_exam_authorization\authorization::get_moodle();
     echo html_writer::start_tag('UL');
-
-    foreach($SESSION->exam_remote_courses AS $identifier=>$remote_courses) {
+    foreach($SESSION->exam_courses AS $identifier=>$courses) {
         echo html_writer::start_tag('LI');
         echo html_writer::tag('STRONG', $moodles[$identifier]->description);
         echo exam_build_html_category_tree($identifier);
         echo html_writer::end_tag('LI');
     }
-
     echo html_writer::end_tag('UL');
 }
 

@@ -20,19 +20,18 @@
  */
 
 require('../../config.php');
-require_once('release_computer_form.php');
-require_once($CFG->dirroot . '/local/exam_authorization/classes/exam_authorization.php');
+require_once(dirname(__FILE__).'/release_computer_form.php');
 
 $baseurl = new moodle_url('/blocks/exam_actions/release_computer.php');
 $returnurl = new moodle_url('/');
 
-if(!\local\exam_authorization::check_ip_header(false) || !\local\exam_authorization::check_network_header(false)) {
+if(!\local_exam_authorization\authorization::check_ip_header(false) || !\local_exam_authorization\authorization::check_network_header(false)) {
     print_error('cd_needed', 'block_exam_actions', $returnurl);
 }
-if(!\local\exam_authorization::check_version_header(false)) {
+if(!\local_exam_authorization\authorization::check_version_header(false)) {
     print_error('invalid_cd_version', 'block_exam_actions', $returnurl);
 }
-if(!\local\exam_authorization::check_ip_range_student(false)) {
+if(!\local_exam_authorization\authorization::check_ip_range_student(false)) {
     print_error('out_of_student_ip_ranges', 'block_exam_actions', $returnurl);
 }
 
@@ -61,7 +60,7 @@ if($key = optional_param('key', '', PARAM_TEXT)) {
     } else {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('release_this_computer', 'block_exam_actions'));
-        echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnarrow');
+        echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
         $editform->display();
         echo $OUTPUT->box_end();
         echo $OUTPUT->footer();
