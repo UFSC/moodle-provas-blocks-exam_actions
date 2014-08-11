@@ -21,9 +21,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2014080100;
+$plugin->version = 2014080501;
 $plugin->requires  = 2013111800;
 $plugin->component = 'block_exam_actions'; // Full name of the plugin (used for diagnostics)
 $plugin->dependencies = array(
-    'local_exam_authorization' => 2014080100
+    'local_exam_authorization' => 2014080500
 );

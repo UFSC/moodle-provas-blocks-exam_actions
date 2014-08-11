@@ -12,7 +12,7 @@ class generate_access_key_form extends moodleform {
 
         $courses = $this->_customdata['data'];
         if(count($courses) > 1) {
-            array_unshift ($courses, get_string('select_course', 'block_exam_actions'));
+            $courses = array(0=>get_string('select_course', 'block_exam_actions')) + $courses;
         }
 
         $mform->addElement('select', 'courseid', get_string('course', 'block_exam_actions'), $courses);

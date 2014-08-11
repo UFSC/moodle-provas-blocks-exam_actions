@@ -23,13 +23,13 @@ require('../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 
-$courseid = required_param('id', PARAM_INT);
+$courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id'=>$courseid), 'id, shortname, fullname', MUST_EXIST);
 $context = context_course::instance($courseid);
 require_capability('moodle/backup:backupcourse', $context);
 
-$baseurl = new moodle_url('/blocks/exam_actions/export_exam.php', array('id'=>$courseid));
-$returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
+$baseurl = new moodle_url('/blocks/exam_actions/export_exam.php', array('courseid'=>$courseid));
+$returnurl = new moodle_url('/course/view.php', array('courseid'=>$courseid));
 
 $site = get_site();
 
@@ -49,7 +49,7 @@ if(empty($export)) {
     echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
 
     echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));
-    echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'id', 'value'=>$courseid));
+    echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
     foreach($activities AS $act) {
         $module = get_string('modulename', $act->mod);
         $name = "{$act->name} ({$module})";
