@@ -55,10 +55,21 @@ if ($editform->is_cancelled()) {
     if(!has_capability('block/exam_actions:conduct_exam', $context)) {
         print_error('no_proctor', 'block_exam_actions');
     }
+
+    $sql = "SELECT MAX(timecreated) AS last_time
+              FROM {exam_access_keys} ak
+             WHERE ak.courseid = :courseid";
+    if(!$last_time = $DB->get_field_sql($sql, array('courseid'=>$data->courseid))) {
+        $last_time = 0;
+    }
+
     $access_key = exam_generate_access_key($data->courseid, $USER->id, $data->access_key_timeout, $data->verify_client_host);
     if($local_shortname = $DB->get_field('course', 'shortname', array('id'=>$data->courseid))) {
         list($identifier, $shortname) = explode('_', $local_shortname, 2);
-        exam_enrol_students($identifier, $shortname, $course);
+
+        if(abs(time() - $last_time) / 60 > 60)  { // more than 60 minutes from the last key generation
+            exam_enrol_students($identifier, $shortname, $course);
+        }
 
         // generate and show access key
         echo $OUTPUT->header();

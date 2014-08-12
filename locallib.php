@@ -251,7 +251,7 @@ function exam_get_students($identifier, $course_shortname, $userfields=array(), 
         $student = new stdClass();
         $student->id = $st->id;
         foreach($st->userfields AS $obj) {
-            $field = $obj->shortname;
+            $field = $obj->field;
             $student->$field = $obj->value;
         }
         $students[$student->id] = $student;

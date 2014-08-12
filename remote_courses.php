@@ -37,8 +37,9 @@ if(optional_param('confirmadd', 0, PARAM_INT) && confirm_sesskey()) {
             $remote_course = $SESSION->exam_courses[$identifier][$shortname];
             if(in_array('editor', $remote_course->functions)) {
                 $new_course = exam_add_course($identifier, $remote_course);
-                exam_enrol_user($USER->id, $new_course->id, 'editingteacher');
-                exam_add_students($identifier, $shortname);
+                $roleid = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'), MUST_EXIST);
+                enrol_try_internal_enrol($new_course->id, $USER->id, $roleid);
+                exam_enrol_students($identifier, $shortname, $new_course);
                 redirect(new moodle_url('/course/view.php', array('id'=>$new_course->id)));
             } else {
                 print_error('no_editor', 'block_exam_actions');

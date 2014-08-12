@@ -44,7 +44,7 @@ $PAGE->navbar->add(get_string('monitor_exam', 'block_exam_actions'));
 
 echo $OUTPUT->header();
 
-$tab_items = array('generated_access_keys', 'used_access_keys', 'student_access');
+$tab_items = array('generated_access_keys', 'used_access_keys');
 $tabs = array();
 foreach($tab_items AS $act) {
     $url = clone $baseurl;
@@ -133,82 +133,6 @@ case 'used_access_keys':
     $table = new html_table();
     $table->head = $head;
     $table->data = $data;
-    break;
-
-case 'student_access':
-    $day = optional_param('day', '' , PARAM_TEXT);
-
-    $sql = "SELECT DISTINCT akl.time
-              FROM {exam_access_keys_log} akl
-              JOIN {exam_access_keys} ak ON (ak.access_key = akl.access_key)
-             WHERE ak.courseid = :courseid
-          ORDER BY akl.time";
-    $recs = $DB->get_records_sql($sql, array('courseid'=>$courseid));
-    $days = array();
-    foreach($recs AS $rec) {
-        $d = date('Y-m-d', $rec->time);
-        $days[$d] = true;
-    }
-    $days = array_keys($days);
-    if(empty($day) && !empty($days)) {
-        $day = $days[count($days)-1];
-    }
-
-    if(empty($day)) {
-        echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
-        echo $OUTPUT->heading(get_string('no_student_access_data', 'block_exam_actions'));
-        echo $OUTPUT->box_end();
-    } else {
-
-        $tabs = array();
-        foreach($days AS $d) {
-            $url = clone $baseurl;
-            $url->param('action', $action);
-            $url->param('day', $d);
-            $t = strtotime($d);
-            $tabs[$d] = new tabobject($d, $url, userdate($t, get_string('strftimedate', 'langconfig')));
-        }
-        print_tabs(array($tabs), $day);
-
-        $begintime = strtotime($day . ' 0:0');
-        $endtime = strtotime($day . ' 24:0');
-
-        $sql = "SELECT u.firstname, u.lastname, l.time, l.action
-                  FROM {log} l
-                  JOIN (SELECT DISTINCT userid
-                          FROM {role_assignments} ra
-                          JOIN {role} r ON (r.shortname = 'student' AND r.id = ra.roleid)
-                          JOIN {context} ctx ON (ctx.id = ra.contextid AND ctx.contextlevel = :contextlevel)
-                         WHERE ctx.instanceid = :courseid) j
-                    ON (j.userid = l.userid)
-                  JOIN {user} u ON (u.id = l.userid)
-                 WHERE l.time >= :begintime
-                   AND l.time <  :endtime
-                   AND (l.action IN ('login', 'logout') OR l.module = 'quiz')
-              ORDER BY u.firstname, u.lastname, l.id";
-        $recs = $DB->get_recordset_sql($sql, array('courseid'=>$courseid, 'contextlevel'=>CONTEXT_COURSE,
-                                                   'begintime'=>$begintime, 'endtime'=>$endtime));
-        $data = array();
-        foreach($recs AS $rec) {
-            $data[] = array($rec->firstname.' '.$rec->lastname,
-                            $rec->action,
-                            userdate($rec->time, get_string('strftimedatetime', 'langconfig')),
-                           );
-        }
-        if(empty($data)) {
-            echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
-            echo $OUTPUT->heading(get_string('no_student_access_data', 'block_exam_actions'));
-            echo $OUTPUT->box_end();
-        } else {
-            $table = new html_table();
-            $table->head  = array(get_string('student', 'grades'),
-                                  get_string('action'),
-                                  get_string('date'),
-                                 );
-            $table->data = $data;
-            $boxwidth = 'boxwidthnormal';
-        }
-    }
     break;
 }
 
