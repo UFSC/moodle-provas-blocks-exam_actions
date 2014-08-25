@@ -8,15 +8,15 @@
 // sobre os termos da "GNU General Public License" como publicada pela
 // "Free Software Foundation".
 
-// copyright 2012 Universidade Federal de Santa Catarina (http://moodle.ufsc.br)
-// license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// You should have received a copy of the GNU General Public License
+// along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Version details
  *
- * @package    blocks
- * @subpackage exam_actions
- * @copyright  2014 - Antonio Carlos Mariani
+ * @package    block_exam_actions
+ * @copyright  2014 onwards Antonio Carlos Mariani (https://moodle.ufsc.br)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();

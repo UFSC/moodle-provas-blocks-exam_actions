@@ -8,16 +8,18 @@
 // sobre os termos da "GNU General Public License" como publicada pela
 // "Free Software Foundation".
 
-// copyright 2012 Antonio Carlos Mariani (http://moodle.ufsc.br)
-// license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// You should have received a copy of the GNU General Public License
+// along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
+ * This file contains the Exam Actions block.
  *
- * @package    block
- * @subpackage provas_access_key
- * @copyright  2012 - Antonio Carlos Mariani
+ * @package    block_exam_actions
+ * @copyright  2012 onwards Antonio Carlos Mariani (https://moodle.ufsc.br)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 class block_exam_actions extends block_base {
     /**
