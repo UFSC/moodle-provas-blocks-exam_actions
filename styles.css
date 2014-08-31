@@ -14,3 +14,7 @@
 .block_exam_actions .block_tree li.depth_2 ul {padding-left:16px;margin:0;}
 
 .block_exam_actions .computer_released {color: DarkGreen;}
+
+.student_table .kept {color: Gray;}
+.student_table .enrolled {color: DarkGreen;}
+.student_table .unenrolled {color: Red;}

@@ -31,6 +31,7 @@ $string['title'] = 'Moodle Provas';
 $string['no_permission'] = 'Você não tem permissão para realizar esta operação.';
 $string['no_remote_course_found'] = 'Não foi localizado curso equivamente no Moodle Remoto.';
 
+$string['review_permissions'] = 'Revisar permissões';
 $string['remote_courses'] = 'Cursos remotos';
 $string['remote_courses_msg'] = 'Abaixo está a relação de cursos das instalações remotos de Moodle ligadados ao Moodle Provas.
     Clique no nome do curso para ter acesso a ele (caso já esteja disponível) ou para disponibilizá-lo no Moodle Provas.';
@@ -102,4 +103,8 @@ $string['used_by'] = 'Utilizada por';
 $string['used_time'] = 'Utilizada em';
 $string['createdon'] = 'Criada em';
 $string['createdby'] = 'Criada por';
+
+$string['kept'] = 'Mantido';
+$string['enrolled'] = 'Inscrito';
+$string['unenrolled'] = 'Desinscrito';
 ?>

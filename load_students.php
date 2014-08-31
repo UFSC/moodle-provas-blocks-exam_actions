@@ -51,8 +51,9 @@ $data = array();
 $ind = 0;
 foreach($students AS $st) {
     $ind++;
-    $status  = $st->enrol == ENROL_USER_SUSPENDED ? get_string('participationsuspended', 'enrol') : get_string('participationactive', 'enrol');
-    $line = array($ind, $st->username, $st->firstname, $st->lastname, $st->auth, $status);
+    $status = $st->enrol == ENROL_USER_SUSPENDED ? get_string('participationsuspended', 'enrol') : get_string('participationactive', 'enrol');
+    $action = html_writer::tag('SPAN', get_string($st->action, 'block_exam_actions'), array('class'=>$st->action));
+    $line = array($ind, $st->username, $st->firstname, $st->lastname, $st->auth, $status, $action);
     foreach($customfields AS $f=>$name) {
         $field = 'profile_field_' . $f;
         $line[] = isset($st->$field) ? $st->$field : '';
@@ -66,6 +67,7 @@ $head = array('',
               get_string('lastname'),
               get_string('type_auth', 'plugin'),
               get_string('status'),
+              get_string('action'),
              );
 foreach($customfields AS $f=>$name) {
     $head[] = $name;
@@ -79,7 +81,9 @@ echo $OUTPUT->heading(get_string('loaded_students', 'block_exam_actions'));
 echo $OUTPUT->heading($course->fullname);
 
 echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
+echo html_writer::start_tag('DIV', array('class'=>'student_table'));
 echo html_writer::table($table);
+echo html_writer::end_tag('DIV');
 echo $OUTPUT->box_end();
 
 echo $OUTPUT->footer();

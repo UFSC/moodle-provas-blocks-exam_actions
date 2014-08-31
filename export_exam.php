@@ -29,7 +29,7 @@ $context = context_course::instance($courseid);
 require_capability('moodle/backup:backupcourse', $context);
 
 $baseurl = new moodle_url('/blocks/exam_actions/export_exam.php', array('courseid'=>$courseid));
-$returnurl = new moodle_url('/course/view.php', array('courseid'=>$courseid));
+$returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
 
 $site = get_site();
 

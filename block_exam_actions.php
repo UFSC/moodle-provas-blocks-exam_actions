@@ -51,15 +51,14 @@ class block_exam_actions extends block_base {
             return $this->content;
         }
 
-        if(isset($SESSION->exam_functions['student'])) {
-            return $this->content;
-        }
-
         $links = array();
         if(is_a($PAGE->context, 'context_course')) {
-            if($PAGE->context->instanceid == 1) {
+            if($PAGE->course->id == 1) {
                 $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/release_computer.php'), get_string('release_this_computer', 'block_exam_actions'));
             } else {
+                if(!isset($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_user_functions)) {
+                    return $this->content->text = 'abc';
+                }
                 if(has_capability('moodle/backup:backupactivity', $PAGE->context)) {
                     $links[5] = html_writer::link(new moodle_url('/blocks/exam_actions/export_exam.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('export_exam', 'block_exam_actions'));
@@ -68,28 +67,27 @@ class block_exam_actions extends block_base {
                     $links[4] = html_writer::link(new moodle_url('/blocks/exam_actions/sync_groups.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('sync_groups', 'block_exam_actions'));
                 }
-                if(has_capability('block/exam_actions:conduct_exam', $PAGE->context)) {
+                $conduct = false;
+                if(has_capability('block/exam_actions:conduct_exam', $PAGE->context) && $PAGE->course->visible) {
                     $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('generate_access_key', 'block_exam_actions'));
-                    $links[3] = html_writer::link(new moodle_url('/blocks/exam_actions/load_students.php', array('courseid'=>$PAGE->context->instanceid)),
-                                                 get_string('load_students', 'block_exam_actions'));
+                    $conduct = true;
                 }
-                if(has_capability('block/exam_actions:monitor_exam', $PAGE->context)) {
+                if(has_capability('block/exam_actions:monitor_exam', $PAGE->context) && $PAGE->course->visible) {
                     $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/monitor_exam.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('monitor_exam', 'block_exam_actions'));
                 }
+                if($conduct || in_array('editor', $SESSION->exam_user_functions)) {
+                    $links[3] = html_writer::link(new moodle_url('/blocks/exam_actions/load_students.php', array('courseid'=>$PAGE->context->instanceid)),
+                                                 get_string('load_students', 'block_exam_actions'));
+                }
             }
         } else if(is_a($PAGE->context, 'context_user')) {
-            \local_exam_authorization\authorization::calculate_functions($USER->username);
-            foreach($SESSION->exam_functions AS $f=>$courses) {
-                switch ($f) {
-                    case 'editor':
-                        $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/remote_courses.php'), get_string('new_course', 'block_exam_actions'));
-                        break;
-                    case 'proctor':
-                        $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php'), get_string('generate_access_key', 'block_exam_actions'));
-                        break;
-                }
+            if(in_array('editor', $SESSION->exam_user_functions)) {
+                $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/remote_courses.php'), get_string('new_course', 'block_exam_actions'));
+            }
+            if(!empty($SESSION->exam_user_functions)) {
+                $links[6] = html_writer::link(new moodle_url('/blocks/exam_actions/review_permissions.php'), get_string('review_permissions', 'block_exam_actions'));
             }
         }
 

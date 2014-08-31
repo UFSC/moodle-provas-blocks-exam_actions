@@ -36,6 +36,7 @@ if(optional_param('cancel', false, PARAM_TEXT)) {
 
 $groupingids = optional_param_array('groupingids', array(), PARAM_INT);
 $groupids = optional_param_array('groupids', array(), PARAM_INT);
+$synchronize = optional_param('synchronize', false, PARAM_TEXT);
 
 $context = context_course::instance($courseid);
 if(!has_capability('moodle/course:managegroups', $context)) {
@@ -65,7 +66,7 @@ $gs = \local_exam_authorization\authorization::call_remote_function($identifier,
 $groupings = array();
 foreach($gs AS $g) {
     $g->localid = groups_get_grouping_by_name($courseid, $g->name);
-    if(!$g->localid && in_array($g->id, $groupingids)) {
+    if($synchronize && !$g->localid && in_array($g->id, $groupingids)) {
         $grouping = new stdClass();
         $grouping->courseid = $courseid;
         $grouping->name     = $g->name;
@@ -78,7 +79,7 @@ $gs = \local_exam_authorization\authorization::call_remote_function($identifier,
 $groups = array();
 foreach($gs AS $g) {
     $g->localid = groups_get_group_by_name($courseid, $g->name);
-    if(!$g->localid && in_array($g->id, $groupids)) {
+    if($synchronize && !$g->localid && in_array($g->id, $groupids)) {
         $group = new stdClass();
         $group->courseid = $courseid;
         $group->name     = $g->name;
@@ -87,22 +88,6 @@ foreach($gs AS $g) {
     $groups[$g->id] = $g;
 }
 
-$students = exam_enrol_students($identifier, $shortname, $course);
-
-$gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_group_members', array('groupids'=>array_keys($groups)));
-foreach($gs AS $gms) {
-    if($groups[$gms->groupid]->localid && in_array($gms->groupid, $groupids)) {
-        foreach($gms->userids AS $uid) {
-            if(isset($students[$uid])) {
-                if($userid = $DB->get_field('user', 'id', array('username'=>$students[$uid]->username))) {
-                    groups_add_member($groups[$gms->groupid]->localid, $userid);
-                }
-            }
-        }
-    }
-}
-unset($gs);
-
 $params = array('returngroups'=>1, 'groupingids'=>array_keys($groupings));
 $groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
 foreach($groupings_groups AS $gg) {
@@ -110,6 +95,31 @@ foreach($groupings_groups AS $gg) {
         foreach($gg->groups AS $g) {
             if($groups[$g->id]->localid && in_array($g->id, $groupids)) {
                 groups_assign_grouping($groupings[$gg->id]->localid, $groups[$g->id]->localid);
+            }
+        }
+    }
+}
+
+if($synchronize) {
+    $students = exam_enrol_students($identifier, $shortname, $course);
+    $gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_group_members', array('groupids'=>array_keys($groups)));
+    foreach($gs AS $gms) {
+        if($groups[$gms->groupid]->localid) {
+            $localid = $groups[$gms->groupid]->localid;
+            $local_users = groups_get_members($localid, 'u.id');
+            foreach($gms->userids AS $uid) {
+                if(isset($students[$uid])) {
+                    if($userid = $DB->get_field('user', 'id', array('username'=>$students[$uid]->username))) {
+                        if(isset($local_users[$userid])) {
+                            unset($local_users[$userid]);
+                        } else {
+                            groups_add_member($localid, $userid);
+                        }
+                    }
+                }
+            }
+            foreach($local_users AS $userid=>$gm) {
+                groups_remove_member($localid, $userid);
             }
         }
     }
@@ -162,7 +172,7 @@ if(count($groups) > count($grouped)) {
     echo html_writer::end_tag('ul');
 }
 
-$sync_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'sync', 'value'=>get_string('sync_groups', 'block_exam_actions')));
+$sync_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'synchronize', 'value'=>get_string('sync_groups', 'block_exam_actions')));
 $cancel_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'cancel', 'value'=>get_string('back')));
 echo html_writer::tag('div', $sync_button . $cancel_button, array('class' => 'buttons'));
 
