@@ -86,7 +86,10 @@ class block_exam_actions extends block_base {
             if(in_array('editor', $SESSION->exam_user_functions)) {
                 $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/remote_courses.php'), get_string('new_course', 'block_exam_actions'));
             }
-            if(!empty($SESSION->exam_user_functions)) {
+            if(in_array('proctor', $SESSION->exam_user_functions)) {
+                $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php'), get_string('generate_access_key', 'block_exam_actions'));
+            }
+            if(!empty($SESSION->exam_user_functions) && ! in_array('student', $SESSION->exam_user_functions)) {
                 $links[6] = html_writer::link(new moodle_url('/blocks/exam_actions/review_permissions.php'), get_string('review_permissions', 'block_exam_actions'));
             }
         }

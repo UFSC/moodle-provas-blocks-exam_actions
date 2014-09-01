@@ -27,4 +27,5 @@ if(!isset($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_u
 
 \local_exam_authorization\authorization::review_permissions($USER);
 
-redirect(new moodle_url('/my'));
+$url = new moodle_url('/my');
+redirect($url, get_string('reviewed_permissions', 'block_exam_actions'), 5);

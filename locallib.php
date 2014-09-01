@@ -187,95 +187,87 @@ function exam_enrol_students($identifier, $shortname, $course) {
     return $students;
 }
 
-function exam_build_html_category_tree($identifier, $rcourses) {
-    if(empty($rcourses)) {
-        return '';
-    } else {
-        $tree = exam_build_category_tree($identifier, $rcourses);
-        $html_cat = exam_recursive_build_html_category_tree($identifier, $tree);
-        if(count($html_cat) > 0) {
-            return html_writer::tag('UL', implode("\n", $html_cat));
-        } else {
-            return '';
+function exam_show_category_tree($username) {
+    $moodles = \local_exam_authorization\authorization::get_moodles();
+    $tree = exam_mount_category_tree($username);
+
+    echo "<OL class=\"tree\">\n";
+    foreach($tree AS $identifier=>$categories) {
+        echo "<LI>\n";
+        echo "<SPAN class=\"identifier\">{$moodles[$identifier]->description}</SPAN>\n";
+        echo "<OL>\n";
+        exam_show_categories($identifier, $categories);
+        echo "</OL>\n";
+        echo "</LI>\n";
+    }
+    echo "</OL>\n";
+}
+
+function exam_show_categories($identifier, $categories) {
+    global $CFG, $OUTPUT;
+
+    foreach($categories AS $cat) {
+        echo "<LI>\n";
+		echo "<label for=\"category{$cat->id}\">$cat->name</label>";
+        echo "<input type=\"checkbox\" id=\"category{$cat->id}\" />\n";
+        echo "<OL>\n";
+        if(!empty($cat->courses)) {
+            foreach($cat->courses AS $c) {
+                $params = array('identifier'=>urlencode($identifier), 'shortname'=>urlencode($c->shortname), 'add'=>1);
+                $url = new moodle_url('/blocks/exam_actions/remote_courses.php', $params);
+                $img = html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('i/course')));
+                echo "<LI class=\"course\">{$img}<a href=\"{$url}\">{$c->fullname}</a></LI>\n";
+            }
         }
+        if(!empty($cat->sub)) {
+            exam_show_categories($identifier, $cat->sub);
+        }
+        echo "</OL>\n";
+        echo "</LI>\n";
     }
 }
 
-function exam_recursive_build_html_category_tree($identifier, &$tree) {
-    global $DB;
-
-    $html_cat = array();
-
-    foreach($tree AS $catid=>$cat) {
-        $html_courses = array();
-        if(!empty($cat['courses'])) {
-            foreach($cat['courses'] AS $c) {
-                $local_shortname = "{$identifier}_{$c->shortname}";
-                if($cid = $DB->get_field('course', 'id', array('shortname'=>$local_shortname))) {
-                    $url = new moodle_url('/course/view.php', array('id'=>$cid));
-                    $already = '<B>' . get_string('already_added', 'block_exam_actions') . '</B>';
-                } else {
-                    $url = new moodle_url('/blocks/exam_actions/remote_courses.php', array('identifier'=>urlencode($identifier), 'shortname'=>urlencode($c->shortname), 'add'=>1));
-                    $already = '';
-                }
-                $html_courses[] = html_writer::tag('LI', html_writer::link($url, $c->fullname) . $already);
-            }
-        }
-
-        if(empty($cat['subcats'])) {
-            $html_subcats = array();
-        } else {
-            $html_subcats = exam_recursive_build_html_category_tree($identifier, $cat['subcats']);
-        }
-
-        if(count($html_courses) + count($html_subcats) > 1) {
-            $html = html_writer::tag('UL', implode("\n", $html_courses) . "\n" . implode("\n", $html_subcats));
-            $html_cat[] = html_writer::tag('LI', $cat['name'] . $html);
-        } else if(count($html_courses) > 0) {
-            $html_cat[] = reset($html_courses);
-        } else if(count($html_subcats) > 0) {
-            $html_cat[] = reset($html_subcats);
-        }
-    }
-
-    return $html_cat;
-}
-
-function exam_build_category_tree($identifier, $rcourses) {
-    $courses = array();
-    foreach($rcourses AS $c) {
-        if(in_array('editor', $c->functions)) {
-            if(!isset($courses[$c->categoryid])) {
-                $courses[$c->categoryid] = array();
-            }
-            $courses[$c->categoryid][] = $c;
-        }
-    }
+function exam_mount_category_tree($username) {
+    $remote_courses = \local_exam_authorization\authorization::get_remote_courses($username);
+    $moodles = \local_exam_authorization\authorization::get_moodles();
 
     $tree = array();
-    $remote_categories = exam_get_remote_categories($identifier, array_keys($courses));
-    foreach($remote_categories AS $cat) {
-        if(isset($courses[$cat->id])) {
-            $cs = $courses[$cat->id];
-        } else {
-            $cs = array();
+    foreach($moodles AS $identifier=>$m) {
+        if(!empty($remote_courses[$identifier])) {
+            $rcourses = array();
+            foreach($remote_courses[$identifier] AS $c) {
+                if(in_array('editor', $c->functions)) {
+                    if(!isset($rcourses[$c->categoryid])) {
+                        $rcourses[$c->categoryid] = array();
+                    }
+                    $rcourses[$c->categoryid][] = $c;
+                }
+                unset($c->functions);
+            }
+            $cats = exam_get_remote_categories($identifier, array_keys($rcourses));
+            foreach($cats AS $catid=>$cat) {
+                $cat->sub = array();
+                $cat->courses = isset($rcourses[$catid]) ? $rcourses[$catid] : array();
+            }
+            foreach($cats AS $catid=>$cat) {
+                $size = count($cat->path);
+                if($size > 1) {
+                    $fatherid = $cat->path[$size-2];
+                    $cats[$fatherid]->sub[$catid] = $cat;
+                }
+            }
+            foreach(array_keys($cats) AS $catid) {
+                $cat = $cats[$catid];
+                if(count($cats[$catid]->path) > 1) {
+                    unset($cats[$catid]);
+                }
+            }
+            $tree[$identifier] = $cats;
         }
-        exam_recursive_build_category_tree($tree, $cat, 0, $cs);
     }
-
     return $tree;
 }
 
-function exam_recursive_build_category_tree(&$tree, $cat, $depth, &$courses) {
-    $pathid = $cat->path[$depth];
-    if($cat->id == $pathid) {
-        $tree[$cat->id]['name'] = $cat->name;
-        $tree[$cat->id]['subcats'] = array();
-        $tree[$cat->id]['courses'] = $courses;
-    } else {
-        exam_recursive_build_category_tree($tree[$pathid]['subcats'], $cat, $depth+1, $courses);
-    }
-}
 
 function exam_get_students($identifier, $course_shortname, $userfields=array(), $customfields=array()) {
     if(empty($userfields)) {
@@ -344,10 +336,11 @@ function exam_courses_menu($function, $capability) {
     $courses_menu = array();
     if(isset($SESSION->exam_user_courseids[$function])) {
         foreach($SESSION->exam_user_courseids[$function] AS $cid) {
-            if($couse = $DB->get_record('course', array('id'=>$cid, 'visible'=>1), 'id, fullname')) {
+            if($course = $DB->get_record('course', array('id'=>$cid, 'visible'=>1), 'id, fullname')) {
                 $context = context_course::instance($cid);
                 if(has_capability($capability, $context)) {
-                    $courses_menu[$cid] = $c->fullname;
+                    $courses_menu[$cid] = $course->fullname;
+
                 }
             }
         }
@@ -367,31 +360,4 @@ function exam_export_activity($identifier, $shortname, $username, $backup_file) 
     $return = \local_exam_authorization\authorization::call_remote_function($identifier, $function, $params);
 
     return $return;
-    // $info =  $curl->get_info();
-    // var_dump($return); exit;
-        /*
-        if($info['http_code'] == 200) { // OK
-            $resp = json_decode($return);
-            if(is_object($resp)) {
-                if(isset($resp->message)) {
-                    return get_string('error', 'block_activities_remote_copy', $resp->message);
-                } else {
-                    return get_string('error_object', 'block_activities_remote_copy', var_export($resp, true));
-                }
-            } else {
-                if($resp == 'OK') {
-                    return $resp;
-                } else {
-                    return get_string('error_return', 'block_activities_remote_copy', $resp);
-                }
-            }
-        } else if($info['http_code'] == 404) { // Not found
-            return get_string('error_url', 'block_activities_remote_copy', $urlbase);
-        } else {
-            return get_string('error_httpcode', 'block_activities_remote_copy', $info['http_code']);
-        }
-    } catch (Exception $e) {
-        return get_string('error_exception', 'block_activities_remote_copy', $e->getMessage());
-    }
-    */
 }

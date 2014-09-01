@@ -26,25 +26,30 @@ require_login();
 
 \local_exam_authorization\authorization::check_ip_range_editor();
 
-if(optional_param('confirmadd', 0, PARAM_INT) && confirm_sesskey()) {
+$add = optional_param('add', 0, PARAM_BOOL);
+$confirm = optional_param('confirmadd', 0, PARAM_BOOL);
+if($add || $confirm) {
     $identifier = urldecode(required_param('identifier', PARAM_TEXT));
     $shortname = urldecode(required_param('shortname', PARAM_TEXT));
     $local_shortname = "{$identifier}_{$shortname}";
     if($id = $DB->get_field('course', 'id', array('shortname'=>$local_shortname))) {
         redirect(new moodle_url('/course/view.php', array('id'=>$id)));
-    } else {
-        if($remote_course = \local_exam_authorization\authorization::get_remote_course($USER->username, $identifier, $shortname)) {
-            if(in_array('editor', $remote_course->functions)) {
-                $new_course = exam_add_course($identifier, $remote_course);
-                \local_exam_authorization\authorization::review_permissions($USER);
-                exam_enrol_students($identifier, $shortname, $new_course);
-                redirect(new moodle_url('/course/view.php', array('id'=>$new_course->id)));
-            } else {
-                print_error('no_editor', 'block_exam_actions');
-            }
+        exit;
+    }
+}
+
+if($confirm && confirm_sesskey()) {
+    if($remote_course = \local_exam_authorization\authorization::get_remote_course($USER->username, $identifier, $shortname)) {
+        if(in_array('editor', $remote_course->functions)) {
+            $new_course = exam_add_course($identifier, $remote_course);
+            \local_exam_authorization\authorization::review_permissions($USER);
+            exam_enrol_students($identifier, $shortname, $new_course);
+            redirect(new moodle_url('/course/view.php', array('id'=>$new_course->id)));
         } else {
-            print_error('no_remote_course', 'block_exam_actions');
+            print_error('no_editor', 'block_exam_actions');
         }
+    } else {
+        print_error('no_remote_course', 'block_exam_actions');
     }
     exit;
 }
@@ -60,10 +65,7 @@ $PAGE->set_pagelayout('standard');
 $PAGE->navbar->add(get_string('remote_courses', 'block_exam_actions'));
 echo $OUTPUT->header();
 
-if (optional_param('add', 0, PARAM_BOOL)) {
-    $identifier = urldecode(required_param('identifier', PARAM_TEXT));
-    $shortname = urldecode(required_param('shortname', PARAM_TEXT));
-
+if ($add) {
     echo $OUTPUT->heading(get_string('enablecourse', 'block_exam_actions', format_string($shortname)));
     $yesurl = new moodle_url('/blocks/exam_actions/remote_courses.php',
                     array('identifier'=>urlencode($identifier), 'shortname'=>urlencode($shortname) ,'confirmadd'=>1,'sesskey'=>sesskey()));
@@ -76,22 +78,10 @@ if (optional_param('add', 0, PARAM_BOOL)) {
 echo $OUTPUT->heading(get_string('remote_courses', 'block_exam_actions'));
 echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
 echo get_string('remote_courses_msg', 'block_exam_actions');
+
+echo html_writer::start_tag('DIV', array('class'=>'remote_courses'));
+echo exam_show_category_tree($USER->username);
+echo html_writer::end_tag('DIV');
+
 echo $OUTPUT->box_end();
-
-$remote_courses = \local_exam_authorization\authorization::get_remote_courses($USER->username);
-$errors = \local_exam_authorization\authorization::get_errors();
-if(empty($remote_courses)) {
-    echo html_writer::tag('h2', get_string('no_remote_courses', 'block_exam_actions'));
-} else {
-    $moodles = \local_exam_authorization\authorization::get_moodles();
-    echo html_writer::start_tag('UL');
-    foreach($remote_courses AS $identifier=>$rcourses) {
-        echo html_writer::start_tag('LI');
-        echo html_writer::tag('STRONG', $moodles[$identifier]->description);
-        echo exam_build_html_category_tree($identifier, $rcourses);
-        echo html_writer::end_tag('LI');
-    }
-    echo html_writer::end_tag('UL');
-}
-
 echo $OUTPUT->footer();

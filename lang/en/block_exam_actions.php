@@ -32,6 +32,7 @@ $string['no_permission'] = 'Você não tem permissão para realizar esta operaç
 $string['no_remote_course_found'] = 'Não foi localizado curso equivamente no Moodle Remoto.';
 
 $string['review_permissions'] = 'Revisar permissões';
+$string['reviewed_permissions'] = 'Suas permissões foram revistas.';
 $string['remote_courses'] = 'Cursos remotos';
 $string['remote_courses_msg'] = 'Abaixo está a relação de cursos das instalações remotos de Moodle ligadados ao Moodle Provas.
     Clique no nome do curso para ter acesso a ele (caso já esteja disponível) ou para disponibilizá-lo no Moodle Provas.';
@@ -48,7 +49,7 @@ $string['student_access'] = 'Acessos dos estudantes';
 $string['release_computer'] = 'Liberar computador';
 $string['release_this_computer'] = 'Liberar computador para realizar prova';
 $string['monitor_exam'] = 'Monitorar prova';
-$string['load_students'] = 'Inscrever estudantes';
+$string['load_students'] = 'Revisar inscrições';
 $string['loaded_students'] = 'Estudantes Inscritos';
 $string['sync_groups'] = 'Sincronizar grupos';
 $string['computer_released'] = 'Computador liberado para realizar prova';
@@ -69,6 +70,7 @@ $string['no_monitor'] = 'Sem permissão para monitorar provas.';
 $string['no_editor'] = 'Sem permissão para editar ou disponibilizar este curso.';
 $string['generating_access_key'] = 'Gerando chave de acesso';
 $string['generating_access_key_title'] = 'As chaves de acesso são necessárias para liberar os computadores que serão utilizados pelos estudantes para realizar provas.';
+$string['no_course_to_generate_key'] = 'Não há cursos disponíveis/visíveis para os quais você possa gerar chave de acesso';
 
 $string['course'] = 'Curso';
 $string['course_help'] = 'Curso para o qual a chave de acesso é válida. Somente estudantes inscritos neste curso poderão ter acesso a ele utilizando essa chave.';

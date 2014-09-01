@@ -28,12 +28,19 @@ if($courseid = optional_param('courseid', 0, PARAM_INT)) {
     $context = context_course::instance($courseid);
     $courses = array($course->id=>$course->fullname);
     $baseurl = new moodle_url('/blocks/exam_actions/generate_access_key.php', array('courseid'=>$courseid));
-    $returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
     $PAGE->set_course($course);
 } else {
-    $context = context_system::instance();
+    $context = context_user::instance($USER->id);
     $courses = exam_courses_menu('proctor', 'block/exam_actions:conduct_exam');
     $baseurl = new moodle_url('/blocks/exam_actions/generate_access_key.php');
+}
+
+if(!$origin = optional_param('origin', false, PARAM_TEXT)) {
+    $origin = $PAGE->course->id == 1 ? 'my' : 'course';
+}
+if($origin == 'course') {
+    $returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
+} else {
     $returnurl = new moodle_url('/my');
 }
 
@@ -45,7 +52,7 @@ $PAGE->set_pagelayout('course');
 $PAGE->set_title(get_string('generating_access_key', 'block_exam_actions'));
 $PAGE->navbar->add(get_string('generating_access_key', 'block_exam_actions'));
 
-$editform = new generate_access_key_form(null, array('data'=>$courses));
+$editform = new generate_access_key_form(null, array('data'=>$courses, 'origin'=>$origin));
 
 if ($editform->is_cancelled()) {
     redirect($returnurl);
@@ -106,7 +113,11 @@ if ($editform->is_cancelled()) {
     echo "<br/>";
 
     echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
-    $editform->display();
+    if(empty($courses)) {
+        echo $OUTPUT->heading(get_string('no_course_to_generate_key', 'block_exam_actions'));
+    } else {
+        $editform->display();
+    }
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
 }
