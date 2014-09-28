@@ -17,7 +17,7 @@
 
 .student_table .kept {color: Gray;}
 .student_table .enrolled {color: DarkGreen;}
-.student_table .unenrolled {color: Red;}
+.student_table .unenrolled {color: Orange;}
 
 /* CSS Tree menu styles */
 .remote_courses ol.tree {

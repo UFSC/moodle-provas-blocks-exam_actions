@@ -208,8 +208,9 @@ function exam_show_categories($identifier, $categories) {
 
     foreach($categories AS $cat) {
         echo "<LI>\n";
-		echo "<label for=\"category{$cat->id}\">$cat->name</label>";
-        echo "<input type=\"checkbox\" id=\"category{$cat->id}\" />\n";
+        $label = "{$identifier}_category_{$cat->id}";
+        echo "<label for=\"{$label}\">$cat->name</label>";
+        echo "<input type=\"checkbox\" id=\"{$label}\" />\n";
         echo "<OL>\n";
         if(!empty($cat->courses)) {
             foreach($cat->courses AS $c) {

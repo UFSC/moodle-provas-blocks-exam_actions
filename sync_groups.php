@@ -87,14 +87,15 @@ foreach($gs AS $g) {
     }
     $groups[$g->id] = $g;
 }
-
-$params = array('returngroups'=>1, 'groupingids'=>array_keys($groupings));
-$groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
-foreach($groupings_groups AS $gg) {
-    if($groupings[$gg->id]->localid && in_array($gg->id, $groupingids)) {
-        foreach($gg->groups AS $g) {
-            if($groups[$g->id]->localid && in_array($g->id, $groupids)) {
-                groups_assign_grouping($groupings[$gg->id]->localid, $groups[$g->id]->localid);
+if(!empty($groupings)) {
+    $params = array('returngroups'=>1, 'groupingids'=>array_keys($groupings));
+    $groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
+    foreach($groupings_groups AS $gg) {
+        if($groupings[$gg->id]->localid && in_array($gg->id, $groupingids)) {
+            foreach($gg->groups AS $g) {
+                if($groups[$g->id]->localid && in_array($g->id, $groupids)) {
+                    groups_assign_grouping($groupings[$gg->id]->localid, $groups[$g->id]->localid);
+                }
             }
         }
     }
@@ -135,7 +136,9 @@ echo html_writer::start_tag('form', array('method'=>'post'));
 echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
 $str_group = get_string('group', 'group');
 
+$has_group = false;
 $grouped = array();
+
 if(!empty($groupings)) {
     echo html_writer::tag('B', get_string('groupings', 'group') . ':');
     echo html_writer::start_tag('ul');
@@ -151,6 +154,7 @@ if(!empty($groupings)) {
             $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, "{$str_group}: {$g->name}", $params);
             echo html_writer::tag('li', $checkbox);
             $grouped[$g->id] = true;
+            $has_group = true;
         }
         echo html_writer::end_tag('ul');
         echo html_writer::end_tag('li');
@@ -167,12 +171,18 @@ if(count($groups) > count($grouped)) {
             $params = $checked ? array('disabled'=>'disabled') : null;
             $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, "{$str_group}: {$g->name}", $params);
             echo html_writer::tag('li', $checkbox);
+            $has_group = true;
         }
     }
     echo html_writer::end_tag('ul');
 }
 
-$sync_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'synchronize', 'value'=>get_string('sync_groups', 'block_exam_actions')));
+if($has_group) {
+    $sync_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'synchronize', 'value'=>get_string('sync_groups', 'block_exam_actions')));
+} else {
+    $sync_button = '';
+    echo $OUTPUT->heading(get_string('no_groups_to_sync', 'block_exam_actions'));
+}
 $cancel_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'cancel', 'value'=>get_string('back')));
 echo html_writer::tag('div', $sync_button . $cancel_button, array('class' => 'buttons'));
 

@@ -99,6 +99,7 @@ $string['invalid_cd_version'] = 'A versão do CD (ou pendrive) de provas é inv�
 $string['out_of_student_ip_ranges'] = 'Este computador não pode ser utilizado para realizar uma prova pois seu número IP está fora da faixa de IPs permitidos.';
 
 $string['no_student_access_data'] = 'Não há dados de acessos de estudantes a serem apresentados';
+$string['no_groups_to_sync'] = 'Não há grupos a sincronizar';
 
 $string['access_keys'] = 'Chaves de acesso';
 $string['used_by'] = 'Utilizada por';
