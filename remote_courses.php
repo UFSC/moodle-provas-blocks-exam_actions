@@ -22,6 +22,8 @@
 require('../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
+$PAGE->requires->css('/blocks/exam_actions/category_tree_css.php');
+
 require_login();
 
 \local_exam_authorization\authorization::check_ip_range_editor();
