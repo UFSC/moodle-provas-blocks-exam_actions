@@ -112,12 +112,10 @@ if ($editform->is_cancelled()) {
     echo $OUTPUT->heading(get_string('generating_access_key_title', 'block_exam_actions'), 4);
     echo "<br/>";
 
-    echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
     if(empty($courses)) {
         echo $OUTPUT->heading(get_string('no_course_to_generate_key', 'block_exam_actions'));
     } else {
         $editform->display();
     }
-    echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
 }

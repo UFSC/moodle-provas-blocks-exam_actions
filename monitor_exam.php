@@ -55,8 +55,7 @@ foreach($tab_items AS $act) {
 $action = optional_param('action', '' , PARAM_TEXT);
 $action = isset($tabs[$action]) ? $action : reset($tab_items);
 
-echo $OUTPUT->heading(get_string('monitor_exam', 'block_exam_actions'));
-echo $OUTPUT->heading($course->fullname);
+echo $OUTPUT->heading(get_string('monitor_exam_title', 'block_exam_actions', $course->fullname));
 print_tabs(array($tabs), $action);
 
 switch($action) {
@@ -137,10 +136,9 @@ case 'used_access_keys':
 }
 
 if(isset($table)) {
-    $boxwidth = isset($boxwidth) ? $boxwidth : 'boxwidthwide';
-    echo $OUTPUT->box_start('generalbox boxaligncenter '.$boxwidth);
+    echo html_writer::start_tag('DIV', array('class'=>'exam_box'));
     echo html_writer::table($table);
-    echo $OUTPUT->box_end();
+    echo html_writer::end_tag('DIV');
 }
 
 echo $OUTPUT->footer();

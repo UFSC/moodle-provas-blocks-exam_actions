@@ -31,13 +31,18 @@ $string['title'] = 'Moodle Provas';
 $string['no_permission'] = 'Você não tem permissão para realizar esta operação.';
 $string['no_remote_course_found'] = 'Não foi localizado curso equivamente no Moodle Remoto.';
 
-$string['review_permissions'] = 'Revisar permissões';
+$string['groupings'] = 'Agrupamentos e respectivos grupos:';
+$string['groups'] = 'Grupos não pertencentes a agrupamentos:';
+
+
+$string['review_permissions'] = 'Revisar minhas permissões';
 $string['reviewed_permissions'] = 'Suas permissões foram revistas.';
 $string['remote_courses'] = 'Cursos remotos';
 $string['remote_courses_msg'] = 'Abaixo está a relação de cursos das instalações remotos de Moodle ligadados ao Moodle Provas.
     Clique no nome do curso para ter acesso a ele (caso já esteja disponível) ou para disponibilizá-lo no Moodle Provas.';
 $string['export_exam'] = 'Exportar prova';
-$string['export_exam_desc'] = 'Selecione abaixo as atividades a serem exportadas para o Moodle de Origem';
+$string['export_exam_title'] = 'Exportar prova: \'{$a}\'';
+$string['export_exam_desc'] = 'Selecione abaixo as atividades a serem exportadas para o Moodle de Origem:';
 $string['export'] = 'Exportar';
 $string['export_result'] = 'Resultado da exportação';
 $string['access_key'] = 'Chave de acesso';
@@ -49,9 +54,11 @@ $string['student_access'] = 'Acessos dos estudantes';
 $string['release_computer'] = 'Liberar computador';
 $string['release_this_computer'] = 'Liberar computador para realizar prova';
 $string['monitor_exam'] = 'Monitorar prova';
+$string['monitor_exam_title'] = 'Monitorar prova: \'{$a}\'';
 $string['load_students'] = 'Revisar inscrições';
-$string['loaded_students'] = 'Estudantes Inscritos';
+$string['loaded_students'] = 'Estudantes Inscritos: \'{$a}\'';
 $string['sync_groups'] = 'Sincronizar grupos';
+$string['sync_groups_title'] = 'Sincronizar grupos: \'{$a}\'';
 $string['computer_released'] = 'Computador liberado para realizar prova';
 $string['new_course'] = 'Disponibilizar novo curso';
 
@@ -61,7 +68,7 @@ $string['no_course'] = 'Não foi localizado curso local: \'{$a}\'';
 $string['enablecourse'] = 'Disponibilizando curso: \'{$a}\'';
 $string['confirmenablecourse'] = 'Você realmente deseja disponibilizar o curso \'{$a}\' no Moodle Provas?';
 
-$string['no_activities_to_export'] = 'Não há atividades a serem exportadas para o Moodle de Origem';
+$string['no_activities_to_export'] = 'Não há atividades a serem exportadas';
 $string['no_selected_activities'] = 'Não foi selecionada nenhuma atividade a ser exportada para o Moodle de Origem';
 
 $string['already_added'] = ' (já disponível)';

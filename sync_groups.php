@@ -127,20 +127,18 @@ if($synchronize) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('sync_groups', 'block_exam_actions'));
-echo $OUTPUT->heading($course->fullname);
+echo $OUTPUT->heading(get_string('sync_groups_title', 'block_exam_actions', $course->fullname));
 
-echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
+echo html_writer::start_tag('DIV', array('class'=>'exam_box exam_list'));
 
 echo html_writer::start_tag('form', array('method'=>'post'));
 echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
-$str_group = get_string('group', 'group');
 
 $has_group = false;
 $grouped = array();
 
 if(!empty($groupings)) {
-    echo html_writer::tag('B', get_string('groupings', 'group') . ':');
+    echo html_writer::tag('B', get_string('groupings', 'block_exam_actions'));
     echo html_writer::start_tag('ul');
     foreach($groupings_groups As $gr) {
         echo html_writer::start_tag('li');
@@ -151,7 +149,7 @@ if(!empty($groupings)) {
         foreach($gr->groups as $g) {
             $checked = $groups[$g->id]->localid ? true : false;
             $params = $checked ? array('disabled'=>'disabled') : null;
-            $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, "{$str_group}: {$g->name}", $params);
+            $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, $g->name, $params);
             echo html_writer::tag('li', $checkbox);
             $grouped[$g->id] = true;
             $has_group = true;
@@ -163,13 +161,13 @@ if(!empty($groupings)) {
 }
 
 if(count($groups) > count($grouped)) {
-    echo html_writer::tag('B', get_string('groups', 'group') . ':');
+    echo html_writer::tag('B', get_string('groups', 'block_exam_actions'));
     echo html_writer::start_tag('ul');
     foreach($groups AS $gid=>$g) {
         if(!isset($grouped[$gid])) {
             $checked = $groups[$g->id]->localid ? true : false;
             $params = $checked ? array('disabled'=>'disabled') : null;
-            $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, "{$str_group}: {$g->name}", $params);
+            $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, $g->name, $params);
             echo html_writer::tag('li', $checkbox);
             $has_group = true;
         }
@@ -187,6 +185,6 @@ $cancel_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=
 echo html_writer::tag('div', $sync_button . $cancel_button, array('class' => 'buttons'));
 
 html_writer::end_tag('form');
-echo $OUTPUT->box_end();
 
+echo html_writer::end_tag('DIV');
 echo $OUTPUT->footer();

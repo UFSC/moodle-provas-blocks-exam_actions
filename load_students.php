@@ -61,7 +61,8 @@ foreach($students AS $st) {
     $data[] = $line;
 }
 
-$head = array('',
+$table = new html_table();
+$table->head = array('',
               get_string('username'),
               get_string('firstname'),
               get_string('lastname'),
@@ -70,20 +71,15 @@ $head = array('',
               get_string('action'),
              );
 foreach($customfields AS $f=>$name) {
-    $head[] = $name;
+    $table->head[] = $name;
 }
 
-$table = new html_table();
-$table->head = $head;
 $table->data = $data;
 
-echo $OUTPUT->heading(get_string('loaded_students', 'block_exam_actions'));
-echo $OUTPUT->heading($course->fullname);
+echo $OUTPUT->heading(get_string('loaded_students', 'block_exam_actions', $course->fullname));
 
-echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
-echo html_writer::start_tag('DIV', array('class'=>'student_table'));
+echo html_writer::start_tag('DIV', array('class'=>'exam_box'));
 echo html_writer::table($table);
 echo html_writer::end_tag('DIV');
-echo $OUTPUT->box_end();
 
 echo $OUTPUT->footer();

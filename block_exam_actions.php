@@ -57,7 +57,7 @@ class block_exam_actions extends block_base {
                 $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/release_computer.php'), get_string('release_this_computer', 'block_exam_actions'));
             } else {
                 if(!isset($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_user_functions)) {
-                    return $this->content->text = 'abc';
+                    return $this->content;
                 }
                 if(has_capability('moodle/backup:backupactivity', $PAGE->context)) {
                     $links[5] = html_writer::link(new moodle_url('/blocks/exam_actions/export_exam.php', array('courseid'=>$PAGE->context->instanceid)),

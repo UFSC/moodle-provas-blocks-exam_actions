@@ -44,28 +44,32 @@ $activities = get_array_of_activities($courseid);
 
 $export = optional_param('export', '', PARAM_TEXT);
 if(empty($export)) {
-    echo $OUTPUT->heading(get_string('export_exam', 'block_exam_actions'));
-    echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 4);
-    echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
-
-    echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));
-    echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
-    foreach($activities AS $act) {
-        $module = get_string('modulename', $act->mod);
-        $name = "{$act->name} ({$module})";
-        echo html_writer::tag('input', $name, array('type'=>'checkbox', 'name'=>"activities[{$act->cm}]", 'value'=>$name));
-        echo html_writer::empty_tag('BR');
-    }
-    echo html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'export', 'value'=>get_string('export', 'block_exam_actions')));
-    echo '&nbsp;';
-    echo html_writer::link($returnurl, get_string('cancel'));
-    echo html_writer::end_tag('form');
+    echo $OUTPUT->heading(get_string('export_exam_title', 'block_exam_actions', $course->fullname));
+    echo html_writer::start_tag('DIV', array('class'=>'exam_box exam_list'));
 
     if(empty($activities)) {
-        print_error('no_activities_to_export', 'block_exam_actions', $returnurl);
-    }
+        echo $OUTPUT->box_start('generalbox boxaligncenter');
+        echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 4);
+        echo $OUTPUT->single_button($returnurl, get_string('back'));
+        echo $OUTPUT->end_start();
+    } else {
+        echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 4);
+        echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));
+        echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
 
-    echo $OUTPUT->box_end();
+        foreach($activities AS $act) {
+            $module = get_string('modulename', $act->mod);
+            $name = "{$act->name} ({$module})";
+            echo html_writer::tag('input', $name, array('type'=>'checkbox', 'name'=>"activities[{$act->cm}]", 'value'=>$name, 'class'=>'exam_checkbox'));
+            echo html_writer::empty_tag('BR');
+        }
+
+        echo html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'export', 'value'=>get_string('export', 'block_exam_actions')));
+        echo '&nbsp;';
+        echo html_writer::link($returnurl, get_string('cancel'));
+        echo html_writer::end_tag('form');
+    }
+    echo html_writer::end_tag('DIV');
 } else {
     $export_activities = optional_param_array('activities', array(), PARAM_TEXT);
     if(empty($export_activities)) {

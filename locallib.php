@@ -191,14 +191,14 @@ function exam_show_category_tree($username) {
     $moodles = \local_exam_authorization\authorization::get_moodles();
     $tree = exam_mount_category_tree($username);
 
-    echo "<OL class=\"tree\">\n";
+    echo html_writer::empty_tag('OL', array('class'=>'tree'));
     foreach($tree AS $identifier=>$categories) {
-        echo "<LI>\n";
-        echo "<SPAN class=\"identifier\">{$moodles[$identifier]->description}</SPAN>\n";
-        echo "<OL>\n";
+        echo html_writer::start_tag('LI');
+        echo html_writer::tag('SPAN', $moodles[$identifier]->description, array('class'=>'identifier'));
+        echo html_writer::start_tag('OL');
         exam_show_categories($identifier, $categories);
-        echo "</OL>\n";
-        echo "</LI>\n";
+        echo html_writer::end_tag('OL');
+        echo html_writer::end_tag('LI');
     }
     echo "</OL>\n";
 }
@@ -207,24 +207,26 @@ function exam_show_categories($identifier, $categories) {
     global $CFG, $OUTPUT;
 
     foreach($categories AS $cat) {
-        echo "<LI>\n";
+        echo html_writer::start_tag('LI');
         $label = "{$identifier}_category_{$cat->id}";
-        echo "<label for=\"{$label}\">$cat->name</label>";
-        echo "<input type=\"checkbox\" id=\"{$label}\" />\n";
-        echo "<OL>\n";
+        $folder_img = html_writer::empty_tag('img', array('src'=> $OUTPUT->pix_url('f/folder'), 'class'=>'exam_pix'));
+        echo html_writer::tag('LABEL', $folder_img . $cat->name, array('for'=>$label));
+        echo html_writer::empty_tag('INPUT', array('type'=>'checkbox', 'id'=>$label));
+        echo html_writer::start_tag('OL');
         if(!empty($cat->courses)) {
             foreach($cat->courses AS $c) {
                 $params = array('identifier'=>urlencode($identifier), 'shortname'=>urlencode($c->shortname), 'add'=>1);
                 $url = new moodle_url('/blocks/exam_actions/remote_courses.php', $params);
                 $img = html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('i/course')));
-                echo "<LI class=\"course\">{$img}<a href=\"{$url}\">{$c->fullname}</a></LI>\n";
+                $link = html_writer::link($url, $c->fullname);
+                echo html_writer::tag('LI', $img . $link , array('class'=>'course'));
             }
         }
         if(!empty($cat->sub)) {
             exam_show_categories($identifier, $cat->sub);
         }
-        echo "</OL>\n";
-        echo "</LI>\n";
+        echo html_writer::end_tag('OL');
+        echo html_writer::end_tag('LI');
     }
 }
 
