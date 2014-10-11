@@ -70,6 +70,74 @@ function exam_add_course($identifier, $remote_course) {
     }
 }
 
+function exam_add_or_update_user($student, $customfields=array()) {
+    global $CFG, $DB;
+
+    $userfields = array('username', 'idnumber', 'firstname', 'lastname', 'email');
+    $userfields_str = 'id, password, auth, ' . implode(', ', $userfields);
+    $auth_enabled = get_enabled_auth_plugins();
+
+    if($user = $DB->get_record('user', array('username'=> $student->username), $userfields_str)) {
+        $update = false;
+        foreach($userfields AS $field) {
+            if( $user->$field != $student->$field) {
+                $user->$field = $student->$field;
+                $update = true;
+            }
+        }
+        $auth = in_array($student->auth, $auth_enabled) ? $student->auth : 'manual';
+        if($user->auth != $auth) {
+            $user->auth = $auth;
+            $update = true;
+        }
+        $password = $user->password;
+        $update_password = $user->auth == 'manual' && get_config('local_exam_authorization', 'update_password');
+        if($update) {
+            unset($user->password);
+            user_update_user($user, false);
+        }
+    } else {
+        $user = new stdClass();
+        $user->confirmed   = 1;
+        $user->mnethostid  = $CFG->mnet_localhost_id;
+        $user->lang        = $CFG->lang;
+        foreach($userfields AS $field) {
+            $user->$field = $student->$field;
+        }
+        $user->auth = in_array($student->auth, $auth_enabled) ? $student->auth : 'manual';
+        $user->id = user_create_user($user, false);
+        $password = '';
+        $update_password = $user->auth == 'manual';
+    }
+
+    if($update_password) {
+        if($password != $student->password && !empty($student->password)) {
+            $password = $student->password;
+            $DB->set_field('user', 'password', $password, array('id'=>$user->id));
+        }
+        if(empty($password)) {
+            $password = 'K5=#' . rand(1000000000, 9999999999);
+            $DB->set_field('user', 'password', $password, array('id'=>$user->id));
+        }
+    }
+
+    if(!empty($customfields)) {
+        $save = false;
+        foreach($customfields AS $f=>$fid) {
+            if(isset($student->$f)) {
+                $field = 'profile_field_' . $f;
+                $student->$field = $student->$f;
+                $save = true;
+            }
+        }
+        if($save) {
+            profile_save_data($student);
+        }
+    }
+
+    return $user->id;
+}
+
 function exam_enrol_students($identifier, $shortname, $course) {
     global $DB, $CFG;
 
@@ -86,7 +154,7 @@ function exam_enrol_students($identifier, $shortname, $course) {
     }
     $roleid = $DB->get_field('role', 'id', array('shortname'=>'student'), MUST_EXIST);
 
-    $userfields = array('username', 'idnumber', 'firstname', 'lastname', 'email', 'auth', 'password');
+    $userfields = array('username', 'idnumber', 'firstname', 'lastname', 'email', 'password', 'auth');
     $userfields_str = 'id, ' . implode(', ', $userfields);
     $customfields = $DB->get_records_menu('user_info_field', null, 'shortname', 'shortname, id');
 
@@ -101,58 +169,8 @@ function exam_enrol_students($identifier, $shortname, $course) {
           GROUP BY ue.userid";
     $already_enrolled = $DB->get_records_sql($sql, array('courseid'=>$course->id, 'roleid'=>$roleid, 'contextcourse'=>CONTEXT_COURSE));
 
-    $auth_enabled = get_enabled_auth_plugins();
-
     foreach($students AS $student) {
-        if($user = $DB->get_record('user', array('username'=> $student->username), $userfields_str)) {
-            $update = false;
-            $update_password = false;
-            foreach($userfields AS $field) {
-                if( $user->$field != $student->$field) {
-                    $user->$field = $student->$field;
-                    $update = true;
-                }
-            }
-            if($user->auth == $student->auth) {
-                if($user->password != $student->password) {
-                    $user->password = $student->password;
-                    $update_password = true;
-                }
-            } else {
-                if(in_array($student->auth, $auth_enabled)) {
-                    $user->auth     = $student->auth;
-                    $user->password = $student->password;
-                    $update_password = true;
-                }
-            }
-
-            if($update || $update_password) {
-                user_update_user($user, $update_password);
-            }
-            $student->id = $user->id;
-        } else {
-            if(!in_array($student->auth, $auth_enabled)) {
-                $student->auth = 'manual';
-            }
-            $student->confirmed      = 1;
-            $student->mnethostid     = $CFG->mnet_localhost_id;
-            $student->lang           = $CFG->lang;
-            $student->id = user_create_user($student, true);
-        }
-
-        if(!empty($customfields)) {
-            $save = false;
-            foreach($customfields AS $f=>$fid) {
-                if(isset($student->$f)) {
-                    $field = 'profile_field_' . $f;
-                    $student->$field = $student->$f;
-                    $save = true;
-                }
-            }
-            if($save) {
-                profile_save_data($student);
-            }
-        }
+        $student->id = exam_add_or_update_user($student, $customfields);
 
         if (isset($already_enrolled[$student->id])) {
             $student->enrol = $already_enrolled[$student->id]->status;
@@ -165,8 +183,8 @@ function exam_enrol_students($identifier, $shortname, $course) {
         }
     }
 
-    foreach($already_enrolled AS $uid=>$st) {
-        if($user = $DB->get_record('user', array('id'=>$uid), $userfields_str)) {
+    foreach($already_enrolled AS $userid=>$st) {
+        if($user = $DB->get_record('user', array('id'=>$userid), $userfields_str)) {
             $user->enrol = $st->status;
             $user->action = 'unenrolled';
             $students[] = $user;
@@ -179,7 +197,7 @@ function exam_enrol_students($identifier, $shortname, $course) {
                      WHERE e.enrol = 'manual'
                        AND e.courseid = :courseid";
             foreach($DB->get_records_sql($sql, array('courseid'=>$course->id, 'roleid'=>$roleid, 'contextcourse'=>CONTEXT_COURSE)) AS $instance) {
-                $enrol->unenrol_user($enrol_instance, $uid);
+                $enrol->unenrol_user($enrol_instance, $userid);
             }
         }
     }
@@ -284,12 +302,12 @@ function exam_get_students($identifier, $course_shortname, $userfields=array(), 
     $students = array();
     foreach(\local_exam_authorization\authorization::call_remote_function($identifier, $function, $params) as $st) {
         $student = new stdClass();
-        $student->id = $st->id;
+        $student->remote_id = $st->id;
         foreach($st->userfields AS $obj) {
             $field = $obj->field;
             $student->$field = $obj->value;
         }
-        $students[$student->id] = $student;
+        $students[$student->remote_id] = $student;
     }
     return $students;
 }

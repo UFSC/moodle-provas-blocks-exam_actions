@@ -6,9 +6,9 @@
 
 .exam_checkbox {margin-left: 30px; margin-top: 5px; margin-bottom: 5px;}
 
-.student_table .kept {color: Gray;}
-.student_table .enrolled {color: DarkGreen;}
-.student_table .unenrolled {color: Orange;}
+.exam_box .kept {color: Gray;}
+.exam_box .enrolled {color: DarkGreen;}
+.exam_box .unenrolled {color: Orange;}
 
 /* CSS Tree menu styles */
 
