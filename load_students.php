@@ -27,8 +27,9 @@ require_login();
 $courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 $context = context_course::instance($courseid);
-if(!has_capability('block/exam_actions:conduct_exam', $context)) {
-    print_error('no_proctor', 'block_exam_actions');
+if(!has_capability('block/exam_actions:conduct_exam', $context) &&
+	!has_capability('moodle/course:update', $context)) {
+    print_error('no_permission', 'block_exam_actions');
 }
 
 $baseurl = new moodle_url('/blocks/exam_actions/load_students.php', array('courseid'=>$courseid));

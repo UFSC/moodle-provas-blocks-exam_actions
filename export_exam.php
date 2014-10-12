@@ -51,7 +51,7 @@ if(empty($export)) {
         echo $OUTPUT->box_start('generalbox boxaligncenter');
         echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 4);
         echo $OUTPUT->single_button($returnurl, get_string('back'));
-        echo $OUTPUT->end_start();
+        echo $OUTPUT->box_end();
     } else {
         echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 4);
         echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));

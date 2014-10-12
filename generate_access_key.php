@@ -60,7 +60,7 @@ if ($editform->is_cancelled()) {
     $course = $DB->get_record('course', array('id'=>$data->courseid, 'visible'=>1), '*', MUST_EXIST);
     $context = context_course::instance($data->courseid);
     if(!has_capability('block/exam_actions:conduct_exam', $context)) {
-        print_error('no_proctor', 'block_exam_actions');
+        print_error('no_permission', 'block_exam_actions');
     }
 
     $sql = "SELECT MAX(timecreated) AS last_time

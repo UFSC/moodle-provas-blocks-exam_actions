@@ -40,8 +40,8 @@ $string['reviewed_permissions'] = 'Suas permissões foram revistas.';
 $string['remote_courses'] = 'Cursos remotos';
 $string['remote_courses_msg'] = 'Abaixo está a relação de cursos das instalações remotos de Moodle ligadados ao Moodle Provas.
     Clique no nome do curso para ter acesso a ele (caso já esteja disponível) ou para disponibilizá-lo no Moodle Provas.';
-$string['export_exam'] = 'Exportar prova';
-$string['export_exam_title'] = 'Exportar prova: \'{$a}\'';
+$string['export_exam'] = 'Exportar atividades';
+$string['export_exam_title'] = 'Exportar atividades: \'{$a}\'';
 $string['export_exam_desc'] = 'Selecione abaixo as atividades a serem exportadas para o Moodle de Origem:';
 $string['export'] = 'Exportar';
 $string['export_result'] = 'Resultado da exportação';
