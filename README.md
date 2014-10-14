@@ -16,10 +16,9 @@ PÓS-INSTALAÇÃO
 
 Após instalar o módulo, execute as seguinte ações:
 
-1) incluir instância do bloco 'exam_actions' na tela inicial do ambiente (Site home)
-	- necessário para que esteja disponível a ação de "Liberar computador para realizar prova"
-
-2) incluir em config.php a linha:
-        $CFG->defaultblocks_override = ':exam_actions';
-   para que seja automaticamente adicionado este bloco em cada curso Moodle que seja criado.
-	- necessário para que estejam disponíveis diversas ações em nível de curso
+# incluir instância do bloco 'exam_actions' na tela inicial do ambiente (Site home)
+## necessário para que esteja disponível a ação de "Liberar computador para realizar prova"
+# incluir em config.php a linha:
+## $CFG->defaultblocks_override = ':exam_actions';
+# para que seja automaticamente adicionado este bloco em cada curso Moodle que seja criado.
+# necessário para que estejam disponíveis diversas ações em nível de curso
