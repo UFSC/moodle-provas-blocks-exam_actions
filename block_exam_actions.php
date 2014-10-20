@@ -66,28 +66,29 @@ class block_exam_actions extends block_base {
             if($PAGE->course->id == 1) {
                 $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/release_computer.php'), get_string('release_this_computer', 'block_exam_actions'));
             } else {
-                if(!isset($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_user_functions)) {
+                $is_admin = is_primary_admin($USER->id);
+                if((!isset($SESSION->exam_user_functions) && !$is_admin) || in_array('student', $SESSION->exam_user_functions)) {
                     return $this->content;
                 }
-                if(has_capability('moodle/backup:backupactivity', $PAGE->context)) {
+                if (has_capability('moodle/backup:backupactivity', $PAGE->context) && !$is_admin) {
                     $links[5] = html_writer::link(new moodle_url('/blocks/exam_actions/export_exam.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('export_exam', 'block_exam_actions'));
                 }
-                if(has_capability('moodle/course:managegroups', $PAGE->context)) {
+                if (has_capability('moodle/course:managegroups', $PAGE->context) || $is_admin) {
                     $links[4] = html_writer::link(new moodle_url('/blocks/exam_actions/sync_groups.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('sync_groups', 'block_exam_actions'));
                 }
                 $conduct = false;
-                if(has_capability('block/exam_actions:conduct_exam', $PAGE->context) && $PAGE->course->visible) {
+                if ((has_capability('block/exam_actions:conduct_exam', $PAGE->context) && $PAGE->course->visible)) {
                     $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('generate_access_key', 'block_exam_actions'));
                     $conduct = true;
                 }
-                if(has_capability('block/exam_actions:monitor_exam', $PAGE->context) && $PAGE->course->visible) {
+                if ((has_capability('block/exam_actions:monitor_exam', $PAGE->context) && $PAGE->course->visible) || $is_admin) {
                     $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/monitor_exam.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('monitor_exam', 'block_exam_actions'));
                 }
-                if($conduct || in_array('editor', $SESSION->exam_user_functions)) {
+                if ($conduct || in_array('editor', $SESSION->exam_user_functions) || $is_admin) {
                     $links[3] = html_writer::link(new moodle_url('/blocks/exam_actions/load_students.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('load_students', 'block_exam_actions'));
                 }
