@@ -31,7 +31,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014101100;
+$plugin->version   = 2014102700;
 $plugin->requires  = 2013111800; //Moodle 2.6
 $plugin->component = 'block_exam_actions';
 $plugin->dependencies = array(

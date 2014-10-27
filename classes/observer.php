@@ -49,6 +49,27 @@ class block_exam_actions_observer {
         return true;
     }
 
+    public static function user_loggedinas(\core\event\user_loggedinas $event) {
+        global $CFG, $DB, $SESSION;
+
+        if(is_siteadmin($event->relateduserid) || isguestuser($event->relateduserid)) {
+            return true;
+        }
+
+        if(!$user = $DB->get_record('user', array('id'=>$event->relateduserid))) {
+            return true;
+        }
+
+        \local_exam_authorization\authorization::review_permissions($user);
+        if(isset($SESSION->exam_user_functions) && !in_array('student', $SESSION->exam_user_functions)) {
+            require_once($CFG->libdir . '/blocklib.php');
+            require_once($CFG->dirroot . '/my/lib.php');
+            self::add_block_to_user($event->relateduserid, 'exam_actions');
+        }
+
+        return true;
+    }
+
     private static function add_block_to_user($userid, $block_name) {
         $page = new moodle_page();
         if(!$page->blocks->is_known_block_type($block_name)) {

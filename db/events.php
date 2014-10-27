@@ -35,6 +35,11 @@ $observers = array(
     array(
         'eventname' => '\core\event\user_loggedin',
         'callback' => 'block_exam_actions_observer::user_loggedin',
+    )
+    ,
+    array(
+        'eventname' => '\core\event\user_loggedinas',
+        'callback' => 'block_exam_actions_observer::user_loggedinas',
     ),
 
 );
