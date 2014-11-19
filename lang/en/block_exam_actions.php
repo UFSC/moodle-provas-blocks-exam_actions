@@ -127,4 +127,7 @@ $string['createdby'] = 'Criada por';
 $string['kept'] = 'Mantido';
 $string['enrolled'] = 'Inscrito';
 $string['unenrolled'] = 'Desinscrito';
+
+$string['no_function'] = 'Não foi identificada nenhuma função/papel com o qual você possa realizar ações sobre cursos neste ambiente.';
+$string['warnings'] = 'Avisos';
 ?>

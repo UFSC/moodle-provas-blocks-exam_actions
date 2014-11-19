@@ -365,18 +365,22 @@ function exam_courses_menu($function, $capability) {
     global $SESSION, $DB;
 
     $courses_menu = array();
-    if(isset($SESSION->exam_user_courseids[$function])) {
-        foreach($SESSION->exam_user_courseids[$function] AS $cid) {
-            if($course = $DB->get_record('course', array('id'=>$cid, 'visible'=>1), 'id, fullname')) {
-                $context = context_course::instance($cid);
+    if(!isset($SESSION->exam_user_courses) || empty($SESSION->exam_user_courses)) {
+        return $courses_menu;
+    }
+
+    foreach($SESSION->exam_user_courses AS $courseid=>$functions) {
+        if(in_array($function, $functions)) {
+            if($course = $DB->get_record('course', array('id'=>$courseid, 'visible'=>1), 'id, fullname')) {
+                $context = context_course::instance($courseid);
                 if(has_capability($capability, $context)) {
-                    $courses_menu[$cid] = $course->fullname;
+                    $courses_menu[$courseid] = $course->fullname;
 
                 }
             }
         }
-        asort($courses_menu);
     }
+    asort($courses_menu);
     return $courses_menu;
 }
 

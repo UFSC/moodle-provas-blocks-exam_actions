@@ -10,6 +10,9 @@
 .exam_box .enrolled {color: DarkGreen;}
 .exam_box .unenrolled {color: Orange;}
 
+.exam_warning {color: DarkBlue}
+.exam_error {color: Red}
+
 /* CSS Tree menu styles */
 
 .remote_courses .exam_pix {

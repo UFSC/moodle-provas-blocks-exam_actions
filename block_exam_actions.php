@@ -60,21 +60,22 @@ class block_exam_actions extends block_base {
             return $this->content;
         }
 
+        if(!isset($SESSION->exam_user_functions) || !isset($SESSION->exam_user_courses)) {
+            return $this->content;
+        }
+
         if(isset($SESSION->exam_access_key)) {
             $this->content->text = html_writer::tag('B', get_string('computer_released', 'block_exam_actions'), array('class'=>'computer_released'));
             return $this->content;
         }
 
-        if(!isset($SESSION->exam_user_functions)) {
-            $SESSION->exam_user_functions = array();
-        }
-
         $links = array();
+        $msg_text = '';
         if(is_a($PAGE->context, 'context_course')) {
             if($PAGE->course->id == 1) {
                 $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/release_computer.php'), get_string('release_this_computer', 'block_exam_actions'));
             } else {
-                if(empty($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_user_functions)) {
+                if(empty($SESSION->exam_user_functions) || isset($SESSION->exam_user_functions['student'])) {
                     return $this->content;
                 }
                 if (has_capability('moodle/backup:backupactivity', $PAGE->context)) {
@@ -95,21 +96,24 @@ class block_exam_actions extends block_base {
                     $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/monitor_exam.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('monitor_exam', 'block_exam_actions'));
                 }
-                if ($conduct || in_array('editor', $SESSION->exam_user_functions)) {
+                if ($conduct || isset($SESSION->exam_user_functions['editor'])) {
                     $links[3] = html_writer::link(new moodle_url('/blocks/exam_actions/load_students.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('load_students', 'block_exam_actions'));
                 }
             }
         } else if(is_a($PAGE->context, 'context_user')) {
-            if(in_array('editor', $SESSION->exam_user_functions)) {
+
+            if(isset($SESSION->exam_user_functions['editor']) && \local_exam_authorization\authorization::check_ip_range_editor(false)) {
                 $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/remote_courses.php'), get_string('new_course', 'block_exam_actions'));
             }
-            if(in_array('proctor', $SESSION->exam_user_functions)) {
+            if(isset($SESSION->exam_user_functions['proctor'])) {
                 $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php'), get_string('generate_access_key', 'block_exam_actions'));
             }
-            if(!empty($SESSION->exam_user_functions) && ! in_array('student', $SESSION->exam_user_functions)) {
+            if(!empty($SESSION->exam_user_functions) && !isset($SESSION->exam_user_functions['student'])) {
                 $links[6] = html_writer::link(new moodle_url('/blocks/exam_actions/review_permissions.php'), get_string('review_permissions', 'block_exam_actions'));
             }
+
+            $msg_text = $this->append_messages();
         }
 
         if(!empty($links)) {
@@ -120,6 +124,8 @@ class block_exam_actions extends block_base {
             }
             $this->content->text = html_writer::tag('UL', $text);
         }
+
+        $this->content->text .= $msg_text;
 
         return $this->content;
     }
@@ -140,6 +146,102 @@ class block_exam_actions extends block_base {
      */
     public function applicable_formats() {
         return array('my'=>true, 'course-view' => true, 'site' => true);
+    }
+
+    private function append_messages() {
+        global $SESSION, $OUTPUT;
+
+        if(isset($SESSION->exam_messages['warnings'])) {
+            $warnings = $SESSION->exam_messages['warnings'];
+            unset($SESSION->exam_messages['warnings']);
+        } else {
+            $warnings = array();
+        }
+        if(isset($SESSION->exam_messages['errors'])) {
+            $errors = $SESSION->exam_messages['errors'];
+            unset($SESSION->exam_messages['errors']);
+        } else {
+            $errors = array();
+        }
+
+        if(!isset($SESSION->exam_user_functions) || empty($SESSION->exam_user_functions)) {
+            $warnings['no_function'] = get_string('no_function', 'block_exam_actions');
+        }
+
+        $text = '';
+        if(empty($warnings) && empty($errors)) {
+            return $text;
+        }
+
+        $text .= $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
+        $text .= html_writer::tag('H3', get_string('warnings', 'block_exam_actions'));
+
+        if(!empty($warnings)) {
+            $msg_txt = '';
+            foreach($warnings AS $code=>$msg) {
+                $msg_txt .= html_writer::tag('LI', $msg, array('class'=>'exam_warning'));
+            }
+            $text .= html_writer::tag('UL', $msg_txt);
+        }
+
+        if(!empty($errors)) {
+            $msg_txt = '';
+            foreach($errors AS $code=>$msg) {
+                $msg_txt .= html_writer::tag('LI', $msg, array('class'=>'exam_error'));
+            }
+            $text .= html_writer::tag('UL', $msg_txt);
+        }
+
+        $text .= $OUTPUT->box_end();
+
+        $js_text = '<script type="text/javascript">// <![CDATA[
+                    var $_ = $.noConflict(true);
+                // ]]></script>
+                <script type="text/javascript">// <![CDATA[
+                    $_(document).ready(function(){
+                    document.getElementsByTagName("body")[0].appendChild(document.getElementById("layer"))
+                    var style_rules = \'\';
+                    var style = \'<style type="text/css">\' + style_rules + "</style>";
+                    $_("head").append(style);
+
+                    });
+                    // ]]>
+
+                    function fechar(id){
+                        domHTML0 = document.getElementById(id);
+                        domHTML1 = document.getElementById(id + "1");
+                        domHTML0.parentNode.removeChild(domHTML0);
+                        domHTML1.parentNode.removeChild(domHTML1);
+                    }
+                // ]]></script>';
+
+        $html_text = '
+            <div id="layer">
+            <div style="z-index: 1000; position: fixed; top: 0px; left: 0px; opacity: 0.6; background-color: #333333;
+                        width: 100%; height: 100%;" onmousedown="fechar(\'id\')" id="id"></div>
+            <div style="z-index: 1000; position: fixed; top: 20%; left: 20%; width: 60%; height: 50%;
+                        background-color: #ffffff;" id="id1">
+            <table style="width: 100%; height: 100%;">
+            <tbody>
+            <tr valign="top" height="80%">
+            <td style="padding: 10px;">';
+
+        $html_text .= $text;
+
+        $html_text .= '
+            </td>
+            </tr>
+            <tr height="20%">
+            <td style="padding: 10px;" valign="middle">
+            <div align="right"><input value="Fechar" onclick="fechar(\'id\')" type="button" /></div>
+            </td>
+            </tr>
+            </tbody>
+            </table>
+            </div>
+            </div>';
+
+        return $js_text . $html_text;
     }
 }
 ?>

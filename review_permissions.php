@@ -31,7 +31,7 @@
 
 require('../../config.php');
 
-if(!isset($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_user_functions)) {
+if(!isset($SESSION->exam_user_functions) || isset($SESSION->exam_user_functions['student'])) {
     print_error('no_permission', 'block_exam_actions');
 }
 

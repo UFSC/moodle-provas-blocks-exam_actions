@@ -31,9 +31,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014102700;
+$plugin->version   = 2014111900;
 $plugin->requires  = 2013111800; //Moodle 2.6
 $plugin->component = 'block_exam_actions';
 $plugin->dependencies = array(
-    'local_exam_authorization' => 2014101100
+    'local_exam_authorization' => 2014111900
 );

@@ -40,11 +40,9 @@ class block_exam_actions_observer {
             return true;
         }
 
-        if(isset($SESSION->exam_user_functions) && !in_array('student', $SESSION->exam_user_functions)) {
-            require_once($CFG->libdir . '/blocklib.php');
-            require_once($CFG->dirroot . '/my/lib.php');
-            self::add_block_to_user($event->userid, 'exam_actions');
-        }
+        require_once($CFG->libdir . '/blocklib.php');
+        require_once($CFG->dirroot . '/my/lib.php');
+        self::add_block_to_user($event->userid, 'exam_actions');
 
         return true;
     }
