@@ -37,7 +37,7 @@ require_login();
 $courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id'=>$courseid));
 $context = context_course::instance($courseid);
-if(!has_capability('block/exam_actions:monitor_exam', $context)) {
+if (!has_capability('block/exam_actions:monitor_exam', $context)) {
     print_error('no_monitor', 'block_exam_actions');
 }
 
@@ -56,7 +56,7 @@ echo $OUTPUT->header();
 
 $tab_items = array('generated_access_keys', 'used_access_keys');
 $tabs = array();
-foreach($tab_items AS $act) {
+foreach ($tab_items AS $act) {
     $url = clone $baseurl;
     $url->param('action', $act);
     $tabs[$act] = new tabobject($act, $url, get_string($act, 'block_exam_actions'));
@@ -78,7 +78,7 @@ case 'generated_access_keys':
           ORDER BY ak.timecreated";
     $recs = $DB->get_records_sql($sql, array('courseid'=>$courseid));
     $data = array();
-    foreach($recs AS $rec) {
+    foreach ($recs AS $rec) {
         $data[] = array($rec->access_key,
                         userdate($rec->timecreated),
                         $rec->firstname.' '.$rec->lastname,
@@ -115,7 +115,7 @@ case 'used_access_keys':
           ORDER BY {$orderby}";
     $recs = $DB->get_records_sql($sql, array('courseid'=>$courseid, 'contextlevel'=>CONTEXT_COURSE));
     $data = array();
-    foreach($recs AS $rec) {
+    foreach ($recs AS $rec) {
         $data[] = array($rec->firstname.' '.$rec->lastname,
                         userdate($rec->time),
                         $rec->access_key,
@@ -129,7 +129,7 @@ case 'used_access_keys':
     $acturl = clone $baseurl;
     $acturl->param('action', $action);
     $head = array();
-    foreach($order_options AS $cmp=>$ord) {
+    foreach ($order_options AS $cmp=>$ord) {
         $url = clone $acturl;
         $url->param('order', $cmp);
         $head[] = html_writer::link($url, get_string($cmp, 'block_exam_actions'));
@@ -145,7 +145,7 @@ case 'used_access_keys':
     break;
 }
 
-if(isset($table)) {
+if (isset($table)) {
     echo html_writer::start_tag('DIV', array('class'=>'exam_box'));
     echo html_writer::table($table);
     echo html_writer::end_tag('DIV');

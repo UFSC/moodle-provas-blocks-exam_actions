@@ -35,17 +35,18 @@ require_once(dirname(__FILE__).'/release_computer_form.php');
 $baseurl = new moodle_url('/blocks/exam_actions/release_computer.php');
 $returnurl = new moodle_url('/');
 
-if(!\local_exam_authorization\authorization::check_ip_header(false) || !\local_exam_authorization\authorization::check_network_header(false)) {
+if (!\local_exam_authorization\authorization::check_ip_header(false) || !\local_exam_authorization\authorization::check_network_header(false)) {
     print_error('cd_needed', 'block_exam_actions', $returnurl);
 }
-if(!\local_exam_authorization\authorization::check_version_header(false)) {
+if (!\local_exam_authorization\authorization::check_version_header(false)) {
     print_error('invalid_cd_version', 'block_exam_actions', $returnurl);
 }
-if(!\local_exam_authorization\authorization::check_ip_range_student(false)) {
+
+if (!\local_exam_authorization\authorization::check_ip_range_student(false)) {
     print_error('out_of_student_ip_ranges', 'block_exam_actions', $returnurl);
 }
 
-if($key = optional_param('key', '', PARAM_TEXT)) {
+if ($key = optional_param('key', false, PARAM_TEXT)) {
     if (!$access_key = $DB->get_record('exam_access_keys', array('access_key' => $key))) {
         print_error('access_key_unknown', 'block_exam_actions');
     }

@@ -53,11 +53,11 @@ echo $OUTPUT->header();
 $activities = get_array_of_activities($courseid);
 
 $export = optional_param('export', '', PARAM_TEXT);
-if(empty($export)) {
+if (empty($export)) {
     echo $OUTPUT->heading(get_string('export_exam_title', 'block_exam_actions', $course->fullname));
     echo html_writer::start_tag('DIV', array('class'=>'exam_box exam_list'));
 
-    if(empty($activities)) {
+    if (empty($activities)) {
         echo $OUTPUT->box_start('generalbox boxaligncenter');
         echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 4);
         echo $OUTPUT->single_button($returnurl, get_string('back'));
@@ -67,7 +67,7 @@ if(empty($export)) {
         echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));
         echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
 
-        foreach($activities AS $act) {
+        foreach ($activities AS $act) {
             $module = get_string('modulename', $act->mod);
             $name = "{$act->name} ({$module})";
             echo html_writer::tag('input', $name, array('type'=>'checkbox', 'name'=>"activities[{$act->cm}]", 'value'=>$name, 'class'=>'exam_checkbox'));
@@ -82,25 +82,25 @@ if(empty($export)) {
     echo html_writer::end_tag('DIV');
 } else {
     $export_activities = optional_param_array('activities', array(), PARAM_TEXT);
-    if(empty($export_activities)) {
+    if (empty($export_activities)) {
         print_error('no_selected_activities', 'block_exam_actions', $baseurl);
     }
     $data = array();
     $adminid = $DB->get_field('user', 'id', array('username'=>'admin'));
     list($identifier, $shortname) = explode('_', $course->shortname, 2);
-    foreach($export_activities AS $cmid=>$act_name) {
+    foreach ($export_activities AS $cmid=>$act_name) {
         // executa backup com permissão de Admin em função de dados de usuários
         try {
             $bc = new backup_controller(backup::TYPE_1ACTIVITY, $cmid, backup::FORMAT_MOODLE, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $adminid);
             $bc->execute_plan();
             $results = $bc->get_results();
             $backup_file = $results['backup_destination']; // May be empty if file already moved to target location.
-            if(empty($backup_file)) {
+            if (empty($backup_file)) {
                 $data[] = array($act_name, get_string('empty_backup_file', 'block_exam_actions'));
             } else {
                 $result = exam_export_activity($identifier, $shortname, $USER->username, $backup_file);
                 $backup_file->delete();
-                if(is_string($result)) {
+                if (is_string($result)) {
                     $data[] = array($act_name, $result);
                 } else {
                     $data[] = array($act_name, get_string('error') . ': '. var_export($result, true));

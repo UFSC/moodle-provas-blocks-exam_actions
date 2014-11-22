@@ -39,7 +39,7 @@ function exam_add_course($identifier, $remote_course) {
     global $DB;
 
     $moodle = \local_exam_authorization\authorization::get_moodle($identifier);
-    if(!$parent = $DB->get_field('course_categories', 'id', array('idnumber'=> $identifier))) {
+    if (!$parent = $DB->get_field('course_categories', 'id', array('idnumber' => $identifier))) {
         $new_cat = new StdClass();
         $new_cat->name = $moodle->description;
         $new_cat->idnumber = $identifier;
@@ -48,12 +48,12 @@ function exam_add_course($identifier, $remote_course) {
         $parent = $new_cat->id;
     }
 
-    if(!$catid = $DB->get_field('course_categories', 'id', array('idnumber'=> $identifier . '_' . $remote_course->categoryid))) {
+    if (!$catid = $DB->get_field('course_categories', 'id', array('idnumber' => $identifier . '_' . $remote_course->categoryid))) {
         $catid = $parent;
         $remote_categories = exam_get_remote_categories($identifier, array($remote_course->categoryid));
-        if(isset($remote_categories[$remote_course->categoryid])) {
-            foreach($remote_categories[$remote_course->categoryid]->path AS $rcid) {
-                if(!$catid = $DB->get_field('course_categories', 'id', array('idnumber'=> $identifier . '_' . $rcid))) {
+        if (isset($remote_categories[$remote_course->categoryid])) {
+            foreach ($remote_categories[$remote_course->categoryid]->path AS $rcid) {
+                if (!$catid = $DB->get_field('course_categories', 'id', array('idnumber' => $identifier . '_' . $rcid))) {
                     $new_cat = new StdClass();
                     $new_cat->name = $remote_categories[$rcid]->name;
                     $new_cat->idnumber = $identifier . '_' . $rcid;
@@ -87,22 +87,30 @@ function exam_add_or_update_user($student, $customfields=array()) {
     $userfields_str = 'id, password, auth, ' . implode(', ', $userfields);
     $auth_enabled = get_enabled_auth_plugins();
 
-    if($user = $DB->get_record('user', array('username'=> $student->username), $userfields_str)) {
+    $default_auth_plugin = \local_exam_authorization\authorization::get_config('auth_plugin');
+
+    if ($user = $DB->get_record('user', array('username' => $student->username), $userfields_str)) {
         $update = false;
-        foreach($userfields AS $field) {
-            if( $user->$field != $student->$field) {
+        foreach ($userfields AS $field) {
+            if ( $user->$field != $student->$field) {
                 $user->$field = $student->$field;
                 $update = true;
             }
         }
-        $auth = in_array($student->auth, $auth_enabled) ? $student->auth : 'manual';
-        if($user->auth != $auth) {
+
+        if (empty($default_auth_plugin)) {
+            $auth = in_array($student->auth, $auth_enabled) ? $student->auth : 'manual';
+        } else {
+            $auth = $default_auth_plugin;
+        }
+        if ($user->auth != $auth) {
             $user->auth = $auth;
             $update = true;
         }
+
         $password = $user->password;
-        $update_password = $user->auth == 'manual' && get_config('local_exam_authorization', 'update_password');
-        if($update) {
+        $update_password = $user->auth == 'manual' && \local_exam_authorization\authorization::get_config('update_password');
+        if ($update) {
             unset($user->password);
             user_update_user($user, false);
         }
@@ -111,7 +119,7 @@ function exam_add_or_update_user($student, $customfields=array()) {
         $user->confirmed   = 1;
         $user->mnethostid  = $CFG->mnet_localhost_id;
         $user->lang        = $CFG->lang;
-        foreach($userfields AS $field) {
+        foreach ($userfields AS $field) {
             $user->$field = $student->$field;
         }
         $user->auth = in_array($student->auth, $auth_enabled) ? $student->auth : 'manual';
@@ -120,32 +128,32 @@ function exam_add_or_update_user($student, $customfields=array()) {
         $update_password = $user->auth == 'manual';
     }
 
-    if($update_password) {
-        if($password != $student->password && !empty($student->password)) {
+    if ($update_password) {
+        if ($password != $student->password && !empty($student->password)) {
             $password = $student->password;
-            $DB->set_field('user', 'password', $password, array('id'=>$user->id));
+            $DB->set_field('user', 'password', $password, array('id' => $user->id));
         }
-        if(empty($password)) {
+        if (empty($password)) {
             $password = 'K5=#' . rand(1000000000, 9999999999);
-            $DB->set_field('user', 'password', $password, array('id'=>$user->id));
+            $DB->set_field('user', 'password', $password, array('id' => $user->id));
         }
     }
 
-    if(!empty($customfields)) {
+    if (!empty($customfields)) {
         $save = false;
-        foreach($customfields AS $f=>$fid) {
-            if(isset($student->$f)) {
+        foreach ($customfields AS $f => $fid) {
+            if (isset($student->$f)) {
                 $field = 'profile_field_' . $f;
                 $student->$field = $student->$f;
                 $save = true;
             }
         }
-        if($save) {
+        if ($save) {
             profile_save_data($student);
         }
     }
 
-    return $user->id;
+    return $user;
 }
 
 function exam_enrol_students($identifier, $shortname, $course) {
@@ -157,12 +165,12 @@ function exam_enrol_students($identifier, $shortname, $course) {
     if (!$enrol = enrol_get_plugin('manual')) {
         print_error('Enrol manual plugin is not enabled');
     }
-    if ($instances = $DB->get_records('enrol', array('enrol'=>'manual', 'courseid'=>$course->id), 'sortorder,id ASC')) {
+    if ($instances = $DB->get_records('enrol', array('enrol' => 'manual', 'courseid' => $course->id), 'sortorder,id ASC')) {
         $enrol_instance = reset($instances);
     } else {
         $enrol_instance = $enrol->add_default_instance($course);
     }
-    $roleid = $DB->get_field('role', 'id', array('shortname'=>'student'), MUST_EXIST);
+    $roleid = $DB->get_field('role', 'id', array('shortname' => 'student'), MUST_EXIST);
 
     $userfields = array('username', 'idnumber', 'firstname', 'lastname', 'email', 'password', 'auth');
     $userfields_str = 'id, ' . implode(', ', $userfields);
@@ -177,10 +185,11 @@ function exam_enrol_students($identifier, $shortname, $course) {
              WHERE e.enrol = 'manual'
                AND e.courseid = :courseid
           GROUP BY ue.userid";
-    $already_enrolled = $DB->get_records_sql($sql, array('courseid'=>$course->id, 'roleid'=>$roleid, 'contextcourse'=>CONTEXT_COURSE));
-
-    foreach($students AS $student) {
-        $student->id = exam_add_or_update_user($student, $customfields);
+    $already_enrolled = $DB->get_records_sql($sql, array('courseid' => $course->id, 'roleid' => $roleid, 'contextcourse' => CONTEXT_COURSE));
+    
+    $result_students = array();
+    foreach ($students AS $student) {
+        $student = exam_add_or_update_user($student, $customfields);
 
         if (isset($already_enrolled[$student->id])) {
             $student->enrol = $already_enrolled[$student->id]->status;
@@ -191,13 +200,15 @@ function exam_enrol_students($identifier, $shortname, $course) {
             $student->enrol = ENROL_USER_SUSPENDED;
             $student->action = 'enrolled';
         }
+
+        $result_students[$student->id] = $student;
     }
 
-    foreach($already_enrolled AS $userid=>$st) {
-        if($user = $DB->get_record('user', array('id'=>$userid), $userfields_str)) {
+    foreach ($already_enrolled AS $userid => $st) {
+        if ($user = $DB->get_record('user', array('id' => $userid), $userfields_str)) {
             $user->enrol = $st->status;
             $user->action = 'unenrolled';
-            $students[] = $user;
+            $result_students[$user->id] = $user;
 
             $sql = "SELECT ue.*
                       FROM {enrol} e
@@ -206,23 +217,23 @@ function exam_enrol_students($identifier, $shortname, $course) {
                       JOIN {role_assignments} ra ON (ra.contextid = ctx.id AND ra.userid = ue.userid AND ra.roleid = :roleid)
                      WHERE e.enrol = 'manual'
                        AND e.courseid = :courseid";
-            foreach($DB->get_records_sql($sql, array('courseid'=>$course->id, 'roleid'=>$roleid, 'contextcourse'=>CONTEXT_COURSE)) AS $instance) {
+            foreach ($DB->get_records_sql($sql, array('courseid' => $course->id, 'roleid' => $roleid, 'contextcourse' => CONTEXT_COURSE)) AS $instance) {
                 $enrol->unenrol_user($enrol_instance, $userid);
             }
         }
     }
 
-    return $students;
+    return $result_students;
 }
 
 function exam_show_category_tree($username) {
     $moodles = \local_exam_authorization\authorization::get_moodles();
     $tree = exam_mount_category_tree($username);
 
-    echo html_writer::empty_tag('OL', array('class'=>'tree'));
-    foreach($tree AS $identifier=>$categories) {
+    echo html_writer::empty_tag('OL', array('class' => 'tree'));
+    foreach ($tree AS $identifier => $categories) {
         echo html_writer::start_tag('LI');
-        echo html_writer::tag('SPAN', $moodles[$identifier]->description, array('class'=>'identifier'));
+        echo html_writer::tag('SPAN', $moodles[$identifier]->description, array('class' => 'identifier'));
         echo html_writer::start_tag('OL');
         exam_show_categories($identifier, $categories);
         echo html_writer::end_tag('OL');
@@ -234,23 +245,23 @@ function exam_show_category_tree($username) {
 function exam_show_categories($identifier, $categories) {
     global $CFG, $OUTPUT;
 
-    foreach($categories AS $cat) {
+    foreach ($categories AS $cat) {
         echo html_writer::start_tag('LI');
         $label = "{$identifier}_category_{$cat->id}";
-        $folder_img = html_writer::empty_tag('img', array('src'=> $OUTPUT->pix_url('f/folder'), 'class'=>'exam_pix'));
-        echo html_writer::tag('LABEL', $folder_img . $cat->name, array('for'=>$label));
-        echo html_writer::empty_tag('INPUT', array('type'=>'checkbox', 'id'=>$label));
+        $folder_img = html_writer::empty_tag('img', array('src' =>  $OUTPUT->pix_url('f/folder'), 'class' => 'exam_pix'));
+        echo html_writer::tag('LABEL', $folder_img . $cat->name, array('for' => $label));
+        echo html_writer::empty_tag('INPUT', array('type' => 'checkbox', 'id' => $label));
         echo html_writer::start_tag('OL');
-        if(!empty($cat->courses)) {
-            foreach($cat->courses AS $c) {
-                $params = array('identifier'=>urlencode($identifier), 'shortname'=>urlencode($c->shortname), 'add'=>1);
+        if (!empty($cat->courses)) {
+            foreach ($cat->courses AS $c) {
+                $params = array('identifier' => urlencode($identifier), 'shortname' => urlencode($c->shortname), 'add' => 1);
                 $url = new moodle_url('/blocks/exam_actions/remote_courses.php', $params);
-                $img = html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('i/course')));
+                $img = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url('i/course')));
                 $link = html_writer::link($url, $c->fullname);
-                echo html_writer::tag('LI', $img . $link , array('class'=>'course'));
+                echo html_writer::tag('LI', $img . $link , array('class' => 'course'));
             }
         }
-        if(!empty($cat->sub)) {
+        if (!empty($cat->sub)) {
             exam_show_categories($identifier, $cat->sub);
         }
         echo html_writer::end_tag('OL');
@@ -263,12 +274,12 @@ function exam_mount_category_tree($username) {
     $moodles = \local_exam_authorization\authorization::get_moodles();
 
     $tree = array();
-    foreach($moodles AS $identifier=>$m) {
-        if(!empty($remote_courses[$identifier])) {
+    foreach ($moodles AS $identifier => $m) {
+        if (!empty($remote_courses[$identifier])) {
             $rcourses = array();
-            foreach($remote_courses[$identifier] AS $c) {
-                if(in_array('editor', $c->functions)) {
-                    if(!isset($rcourses[$c->categoryid])) {
+            foreach ($remote_courses[$identifier] AS $c) {
+                if (in_array('editor', $c->functions)) {
+                    if (!isset($rcourses[$c->categoryid])) {
                         $rcourses[$c->categoryid] = array();
                     }
                     $rcourses[$c->categoryid][] = $c;
@@ -276,20 +287,20 @@ function exam_mount_category_tree($username) {
                 unset($c->functions);
             }
             $cats = exam_get_remote_categories($identifier, array_keys($rcourses));
-            foreach($cats AS $catid=>$cat) {
+            foreach ($cats AS $catid => $cat) {
                 $cat->sub = array();
                 $cat->courses = isset($rcourses[$catid]) ? $rcourses[$catid] : array();
             }
-            foreach($cats AS $catid=>$cat) {
+            foreach ($cats AS $catid => $cat) {
                 $size = count($cat->path);
-                if($size > 1) {
+                if ($size > 1) {
                     $fatherid = $cat->path[$size-2];
                     $cats[$fatherid]->sub[$catid] = $cat;
                 }
             }
-            foreach(array_keys($cats) AS $catid) {
+            foreach (array_keys($cats) AS $catid) {
                 $cat = $cats[$catid];
-                if(count($cats[$catid]->path) > 1) {
+                if (count($cats[$catid]->path) > 1) {
                     unset($cats[$catid]);
                 }
             }
@@ -301,19 +312,19 @@ function exam_mount_category_tree($username) {
 
 
 function exam_get_students($identifier, $course_shortname, $userfields=array(), $customfields=array()) {
-    if(empty($userfields)) {
+    if (empty($userfields)) {
         $userfields = array('username');
     }
 
     $function = 'local_exam_remote_get_students';
-    $params = array('shortname'=>$course_shortname);
+    $params = array('shortname' => $course_shortname);
     $params['userfields'] = array_merge($userfields, $customfields);
 
     $students = array();
-    foreach(\local_exam_authorization\authorization::call_remote_function($identifier, $function, $params) as $st) {
+    foreach (\local_exam_authorization\authorization::call_remote_function($identifier, $function, $params) as $st) {
         $student = new stdClass();
         $student->remote_id = $st->id;
-        foreach($st->userfields AS $obj) {
+        foreach ($st->userfields AS $obj) {
             $field = $obj->field;
             $student->$field = $obj->value;
         }
@@ -324,10 +335,10 @@ function exam_get_students($identifier, $course_shortname, $userfields=array(), 
 
 function exam_get_remote_categories($identifier, $categoryids) {
     $function = 'local_exam_remote_get_categories';
-    $params = array('categoryids'=>$categoryids);
+    $params = array('categoryids' => $categoryids);
     $rcats = \local_exam_authorization\authorization::call_remote_function($identifier, $function, $params);
     $remote_categories = array();
-    foreach($rcats AS $rcat) {
+    foreach ($rcats AS $rcat) {
         $remote_categories[$rcat->id] = $rcat;
     }
     return $remote_categories;
@@ -365,15 +376,15 @@ function exam_courses_menu($function, $capability) {
     global $SESSION, $DB;
 
     $courses_menu = array();
-    if(!isset($SESSION->exam_user_courses) || empty($SESSION->exam_user_courses)) {
+    if (!isset($SESSION->exam_user_courses) || empty($SESSION->exam_user_courses)) {
         return $courses_menu;
     }
 
-    foreach($SESSION->exam_user_courses AS $courseid=>$functions) {
-        if(in_array($function, $functions)) {
-            if($course = $DB->get_record('course', array('id'=>$courseid, 'visible'=>1), 'id, fullname')) {
+    foreach ($SESSION->exam_user_courses AS $courseid => $functions) {
+        if (in_array($function, $functions)) {
+            if ($course = $DB->get_record('course', array('id' => $courseid, 'visible' => 1), 'id, fullname')) {
                 $context = context_course::instance($courseid);
-                if(has_capability($capability, $context)) {
+                if (has_capability($capability, $context)) {
                     $courses_menu[$courseid] = $course->fullname;
 
                 }

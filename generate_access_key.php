@@ -33,7 +33,7 @@ require('../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/generate_access_key_form.php');
 
-if($courseid = optional_param('courseid', 0, PARAM_INT)) {
+if ($courseid = optional_param('courseid', 0, PARAM_INT)) {
     $course = $DB->get_record('course', array('id'=>$courseid, 'visible'=>1), '*', MUST_EXIST);
     $context = context_course::instance($courseid);
     $courses = array($course->id=>$course->fullname);
@@ -45,10 +45,10 @@ if($courseid = optional_param('courseid', 0, PARAM_INT)) {
     $baseurl = new moodle_url('/blocks/exam_actions/generate_access_key.php');
 }
 
-if(!$origin = optional_param('origin', false, PARAM_TEXT)) {
+if (!$origin = optional_param('origin', false, PARAM_TEXT)) {
     $origin = $PAGE->course->id == 1 ? 'my' : 'course';
 }
-if($origin == 'course') {
+if ($origin == 'course') {
     $returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
 } else {
     $returnurl = new moodle_url('/my');
@@ -69,22 +69,22 @@ if ($editform->is_cancelled()) {
 } else if ($data = $editform->get_data()) {
     $course = $DB->get_record('course', array('id'=>$data->courseid, 'visible'=>1), '*', MUST_EXIST);
     $context = context_course::instance($data->courseid);
-    if(!has_capability('block/exam_actions:conduct_exam', $context)) {
+    if (!has_capability('block/exam_actions:conduct_exam', $context)) {
         print_error('no_permission', 'block_exam_actions');
     }
 
     $sql = "SELECT MAX(timecreated) AS last_time
               FROM {exam_access_keys} ak
              WHERE ak.courseid = :courseid";
-    if(!$last_time = $DB->get_field_sql($sql, array('courseid'=>$data->courseid))) {
+    if (!$last_time = $DB->get_field_sql($sql, array('courseid'=>$data->courseid))) {
         $last_time = 0;
     }
 
     $access_key = exam_generate_access_key($data->courseid, $USER->id, $data->access_key_timeout, $data->verify_client_host);
-    if($local_shortname = $DB->get_field('course', 'shortname', array('id'=>$data->courseid))) {
+    if ($local_shortname = $DB->get_field('course', 'shortname', array('id'=>$data->courseid))) {
         list($identifier, $shortname) = explode('_', $local_shortname, 2);
 
-        if(abs(time() - $last_time) / 60 > 60)  { // more than 60 minutes from the last key generation
+        if (abs(time() - $last_time) / 60 > 60)  { // more than 60 minutes from the last key generation
             exam_enrol_students($identifier, $shortname, $course);
         }
 
@@ -122,7 +122,7 @@ if ($editform->is_cancelled()) {
     echo $OUTPUT->heading(get_string('generating_access_key_title', 'block_exam_actions'), 4);
     echo "<br/>";
 
-    if(empty($courses)) {
+    if (empty($courses)) {
         echo $OUTPUT->heading(get_string('no_course_to_generate_key', 'block_exam_actions'));
     } else {
         $editform->display();

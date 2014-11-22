@@ -39,7 +39,7 @@ $courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 $returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
 
-if(optional_param('cancel', false, PARAM_TEXT)) {
+if (optional_param('cancel', false, PARAM_TEXT)) {
     redirect($returnurl);
     exit;
 }
@@ -49,7 +49,7 @@ $groupids = optional_param_array('groupids', array(), PARAM_INT);
 $synchronize = optional_param('synchronize', false, PARAM_TEXT);
 
 $context = context_course::instance($courseid);
-if(!has_capability('moodle/course:managegroups', $context)) {
+if (!has_capability('moodle/course:managegroups', $context)) {
     print_error('no_permission', 'block_exam_actions');
 }
 
@@ -68,15 +68,15 @@ list($identifier, $shortname) = explode('_', $course->shortname, 2);
 
 $params = array('key'=>'shortname', 'value'=>$shortname);
 $remote_courseid = \local_exam_authorization\authorization::call_remote_function($identifier, 'local_exam_remote_get_courseid', $params);
-if($remote_courseid <= 0) {
+if ($remote_courseid <= 0) {
     print_error('no_remote_course_found', 'block_exam_actions');
 }
 
 $gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_course_groupings', array('courseid'=>$remote_courseid));
 $groupings = array();
-foreach($gs AS $g) {
+foreach ($gs AS $g) {
     $g->localid = groups_get_grouping_by_name($courseid, $g->name);
-    if($synchronize && !$g->localid && in_array($g->id, $groupingids)) {
+    if ($synchronize && !$g->localid && in_array($g->id, $groupingids)) {
         $grouping = new stdClass();
         $grouping->courseid = $courseid;
         $grouping->name     = $g->name;
@@ -87,9 +87,9 @@ foreach($gs AS $g) {
 
 $gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_course_groups', array('courseid'=>$remote_courseid));
 $groups = array();
-foreach($gs AS $g) {
+foreach ($gs AS $g) {
     $g->localid = groups_get_group_by_name($courseid, $g->name);
-    if($synchronize && !$g->localid && in_array($g->id, $groupids)) {
+    if ($synchronize && !$g->localid && in_array($g->id, $groupids)) {
         $group = new stdClass();
         $group->courseid = $courseid;
         $group->name     = $g->name;
@@ -97,13 +97,13 @@ foreach($gs AS $g) {
     }
     $groups[$g->id] = $g;
 }
-if(!empty($groupings)) {
+if (!empty($groupings)) {
     $params = array('returngroups'=>1, 'groupingids'=>array_keys($groupings));
     $groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
-    foreach($groupings_groups AS $gg) {
-        if($groupings[$gg->id]->localid && in_array($gg->id, $groupingids)) {
-            foreach($gg->groups AS $g) {
-                if($groups[$g->id]->localid && in_array($g->id, $groupids)) {
+    foreach ($groupings_groups AS $gg) {
+        if ($groupings[$gg->id]->localid && in_array($gg->id, $groupingids)) {
+            foreach ($gg->groups AS $g) {
+                if ($groups[$g->id]->localid && in_array($g->id, $groupids)) {
                     groups_assign_grouping($groupings[$gg->id]->localid, $groups[$g->id]->localid);
                 }
             }
@@ -111,17 +111,17 @@ if(!empty($groupings)) {
     }
 }
 
-if($synchronize) {
+if ($synchronize) {
     $students = exam_enrol_students($identifier, $shortname, $course);
     $gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_group_members', array('groupids'=>array_keys($groups)));
-    foreach($gs AS $gms) {
-        if($groups[$gms->groupid]->localid) {
+    foreach ($gs AS $gms) {
+        if ($groups[$gms->groupid]->localid) {
             $localid = $groups[$gms->groupid]->localid;
             $local_users = groups_get_members($localid, 'u.id');
-            foreach($gms->userids AS $uid) {
-                if(isset($students[$uid])) {
-                    if($userid = $DB->get_field('user', 'id', array('username'=>$students[$uid]->username))) {
-                        if(isset($local_users[$userid])) {
+            foreach ($gms->userids AS $uid) {
+                if (isset($students[$uid])) {
+                    if ($userid = $DB->get_field('user', 'id', array('username'=>$students[$uid]->username))) {
+                        if (isset($local_users[$userid])) {
                             unset($local_users[$userid]);
                         } else {
                             groups_add_member($localid, $userid);
@@ -129,7 +129,7 @@ if($synchronize) {
                     }
                 }
             }
-            foreach($local_users AS $userid=>$gm) {
+            foreach ($local_users AS $userid=>$gm) {
                 groups_remove_member($localid, $userid);
             }
         }
@@ -147,16 +147,16 @@ echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid',
 $has_group = false;
 $grouped = array();
 
-if(!empty($groupings)) {
+if (!empty($groupings)) {
     echo html_writer::tag('B', get_string('groupings', 'block_exam_actions'));
     echo html_writer::start_tag('ul');
-    foreach($groupings_groups As $gr) {
+    foreach ($groupings_groups As $gr) {
         echo html_writer::start_tag('li');
         $checked = $groupings[$gr->id]->localid ? true : false;
         $params = $checked ? array('disabled'=>'disabled') : null;
         echo html_writer::checkbox('groupingids[]', $gr->id, $checked, $gr->name, $params);
         echo html_writer::start_tag('ul');
-        foreach($gr->groups as $g) {
+        foreach ($gr->groups as $g) {
             $checked = $groups[$g->id]->localid ? true : false;
             $params = $checked ? array('disabled'=>'disabled') : null;
             $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, $g->name, $params);
@@ -170,11 +170,11 @@ if(!empty($groupings)) {
     echo html_writer::end_tag('ul');
 }
 
-if(count($groups) > count($grouped)) {
+if (count($groups) > count($grouped)) {
     echo html_writer::tag('B', get_string('groups', 'block_exam_actions'));
     echo html_writer::start_tag('ul');
-    foreach($groups AS $gid=>$g) {
-        if(!isset($grouped[$gid])) {
+    foreach ($groups AS $gid=>$g) {
+        if (!isset($grouped[$gid])) {
             $checked = $groups[$g->id]->localid ? true : false;
             $params = $checked ? array('disabled'=>'disabled') : null;
             $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, $g->name, $params);
@@ -185,7 +185,7 @@ if(count($groups) > count($grouped)) {
     echo html_writer::end_tag('ul');
 }
 
-if($has_group) {
+if ($has_group) {
     $sync_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'synchronize', 'value'=>get_string('sync_groups', 'block_exam_actions')));
 } else {
     $sync_button = '';

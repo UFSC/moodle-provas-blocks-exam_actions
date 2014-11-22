@@ -65,11 +65,11 @@ $string['release_computer'] = 'Liberar computador';
 $string['release_this_computer'] = 'Liberar computador para realizar prova';
 $string['monitor_exam'] = 'Monitorar prova';
 $string['monitor_exam_title'] = 'Monitorar prova: \'{$a}\'';
-$string['load_students'] = 'Revisar inscrições';
-$string['loaded_students'] = 'Estudantes Inscritos: \'{$a}\'';
+$string['sync_students'] = 'Revisar inscrições';
+$string['synced_students'] = 'Estudantes Inscritos: \'{$a}\'';
 $string['sync_groups'] = 'Sincronizar grupos';
 $string['sync_groups_title'] = 'Sincronizar grupos: \'{$a}\'';
-$string['computer_released'] = 'Computador liberado para realizar prova';
+$string['computer_released'] = 'Computador liberado para realizar prova: \'{$a}\'';
 $string['new_course'] = 'Disponibilizar novo curso';
 
 $string['no_remote_courses'] = 'Não foram localizados cursos remotos';

@@ -38,19 +38,19 @@ require_login();
 
 $add = optional_param('add', 0, PARAM_BOOL);
 $confirm = optional_param('confirmadd', 0, PARAM_BOOL);
-if($add || $confirm) {
+if ($add || $confirm) {
     $identifier = urldecode(required_param('identifier', PARAM_TEXT));
     $shortname = urldecode(required_param('shortname', PARAM_TEXT));
     $local_shortname = "{$identifier}_{$shortname}";
-    if($id = $DB->get_field('course', 'id', array('shortname'=>$local_shortname))) {
+    if ($id = $DB->get_field('course', 'id', array('shortname'=>$local_shortname))) {
         redirect(new moodle_url('/course/view.php', array('id'=>$id)));
         exit;
     }
 }
 
-if($confirm && confirm_sesskey()) {
-    if($remote_course = \local_exam_authorization\authorization::get_remote_course($USER->username, $identifier, $shortname)) {
-        if(in_array('editor', $remote_course->functions)) {
+if ($confirm && confirm_sesskey()) {
+    if ($remote_course = \local_exam_authorization\authorization::get_remote_course($USER->username, $identifier, $shortname)) {
+        if (in_array('editor', $remote_course->functions)) {
             $new_course = exam_add_course($identifier, $remote_course);
             \local_exam_authorization\authorization::review_permissions($USER);
             exam_enrol_students($identifier, $shortname, $new_course);

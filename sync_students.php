@@ -21,7 +21,7 @@
 // como publicada pela "Free Software Foundation".
 
 /**
- * This file contains the Load Students page.
+ * This file contains the Sync Students page.
  *
  * @package    block_exam_actions
  * @author     Antonio Carlos Mariani
@@ -37,20 +37,20 @@ require_login();
 $courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 $context = context_course::instance($courseid);
-if(!has_capability('block/exam_actions:conduct_exam', $context) &&
+if (!has_capability('block/exam_actions:conduct_exam', $context) &&
 	!has_capability('moodle/course:update', $context)) {
     print_error('no_permission', 'block_exam_actions');
 }
 
-$baseurl = new moodle_url('/blocks/exam_actions/load_students.php', array('courseid'=>$courseid));
+$baseurl = new moodle_url('/blocks/exam_actions/sync_students.php', array('courseid'=>$courseid));
 $PAGE->set_course($course);
 $PAGE->set_url($baseurl);
 $PAGE->set_context($context);
 $site = get_site();
 $PAGE->set_heading($site->fullname);
 $PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('load_students', 'block_exam_actions'));
-$PAGE->navbar->add(get_string('load_students', 'block_exam_actions'));
+$PAGE->set_title(get_string('sync_students', 'block_exam_actions'));
+$PAGE->navbar->add(get_string('sync_students', 'block_exam_actions'));
 
 echo $OUTPUT->header();
 
@@ -60,12 +60,12 @@ $customfields = $DB->get_records_menu('user_info_field', null, 'shortname', 'sho
 
 $data = array();
 $ind = 0;
-foreach($students AS $st) {
+foreach ($students AS $st) {
     $ind++;
     $status = $st->enrol == ENROL_USER_SUSPENDED ? get_string('participationsuspended', 'enrol') : get_string('participationactive', 'enrol');
     $action = html_writer::tag('SPAN', get_string($st->action, 'block_exam_actions'), array('class'=>$st->action));
     $line = array($ind, $st->username, $st->firstname, $st->lastname, $st->auth, $status, $action);
-    foreach($customfields AS $f=>$name) {
+    foreach ($customfields AS $f=>$name) {
         $field = 'profile_field_' . $f;
         $line[] = isset($st->$field) ? $st->$field : '';
     }
@@ -81,13 +81,13 @@ $table->head = array('',
               get_string('status'),
               get_string('action'),
              );
-foreach($customfields AS $f=>$name) {
+foreach ($customfields AS $f=>$name) {
     $table->head[] = $name;
 }
 
 $table->data = $data;
 
-echo $OUTPUT->heading(get_string('loaded_students', 'block_exam_actions', $course->fullname));
+echo $OUTPUT->heading(get_string('synced_students', 'block_exam_actions', $course->fullname));
 
 echo html_writer::start_tag('DIV', array('class'=>'exam_box'));
 echo html_writer::table($table);
