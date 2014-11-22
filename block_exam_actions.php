@@ -145,7 +145,7 @@ class block_exam_actions extends block_base {
      * @return array
      */
     public function applicable_formats() {
-        return array('my'=>true, 'course-view' => true, 'site' => true);
+        return array('my' => true, 'course-view' => true, 'site' => true);
     }
 
     private function append_messages() {
