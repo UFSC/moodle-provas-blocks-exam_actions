@@ -128,6 +128,7 @@ $string['kept'] = 'Mantido';
 $string['enrolled'] = 'Inscrito';
 $string['unenrolled'] = 'Desinscrito';
 
-$string['no_function'] = 'Não foi identificada nenhuma função/papel com o qual você possa realizar ações sobre cursos neste ambiente.';
+$string['no_function'] = 'Não foi identificada nenhuma função/papel com o qual neste momento você possa realizar ações sobre cursos neste ambiente.
+    No caso específico de acesso de estudantes para a realização de provas, observe que necessária a liberação prévia do computador via chave de acesso gerada pelo responsável por sua aplicação.';
 $string['warnings'] = 'Avisos';
 ?>
