@@ -46,18 +46,21 @@ Instalação
 ==========
 
 Este plugin deve ser instalado no "Moodle de Provas".
+Este plugin é do tipo bloco, logo deve ser instalado no diretório "blocks", na raiz do seu moodle.
+O nome diretório deste plugin dentro do diretório "blocks" deve ser "exam_actions" (sem as aspas).
+Após colocar o código do plugin no diretório correto, visite o seu Moodle como administrador para finalizar a instalação.
 
 Pós-instalação
 ==============
 
 Após instalar o módulo, execute as seguinte ações:
 
-* incluir instância do bloco 'exam_actions' na tela inicial do ambiente (Site home)
- * necessário para que esteja disponível a ação de "Liberar computador para realizar prova"
-* incluir em config.php a linha:
+* Incluir instância do bloco 'exam_actions' na tela inicial do ambiente (Site home)
+ * Necessário para que esteja disponível a ação de "Liberar computador para realizar prova"
+* Incluir no arquivo config.php a linha:
  * $CFG->defaultblocks_override = ':exam_actions';
-* para que seja automaticamente adicionado este bloco em cada curso Moodle que seja criado.
-* necessário para que estejam disponíveis diversas ações em nível de curso
+ * Para que seja automaticamente adicionado este bloco em cada curso Moodle que seja criado.
+ * Necessário para que estejam disponíveis diversas ações em nível de curso
 
 Licença
 =======
