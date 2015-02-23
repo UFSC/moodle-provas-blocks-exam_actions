@@ -45,10 +45,10 @@ O código e instruções para gravação do "CD de Provas" podem ser encontrados
 Instalação
 ==========
 
-Este plugin deve ser instalado no "Moodle de Provas".
-Este plugin é do tipo bloco, logo deve ser instalado no diretório "blocks", na raiz do seu moodle.
-O nome diretório deste plugin dentro do diretório "blocks" deve ser "exam_actions" (sem as aspas).
-Após colocar o código do plugin no diretório correto, visite o seu Moodle como administrador para finalizar a instalação.
+* Este plugin deve ser instalado no "Moodle de Provas".
+* Este plugin é do tipo bloco, logo deve ser instalado no diretório "blocks", na raiz do seu moodle.
+* O nome diretório deste plugin dentro do diretório "blocks" deve ser "exam_actions" (sem as aspas).
+* Após colocar o código do plugin no diretório correto, visite o seu Moodle como administrador para finalizar a instalação.
 
 Pós-instalação
 ==============
