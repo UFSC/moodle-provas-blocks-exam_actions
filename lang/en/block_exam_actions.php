@@ -31,7 +31,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'Ações relativas o Moodle Provas';
+$string['pluginname'] = 'Ações relativas ao Moodle Provas';
 $string['exam_actions:addinstance'] = 'Adiciona um novo bloco exam_actions';
 $string['exam_actions:myaddinstance'] = 'Adiciona um novo bloco exam_actions à Página Inicial';
 $string['exam_actions:conduct_exam'] = 'Gerar chave de acesso';
