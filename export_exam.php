@@ -34,60 +34,37 @@ require_once(dirname(__FILE__).'/locallib.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 
 $courseid = required_param('courseid', PARAM_INT);
-$course = $DB->get_record('course', array('id'=>$courseid), 'id, shortname, fullname', MUST_EXIST);
+$course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 $context = context_course::instance($courseid);
+
 require_capability('moodle/backup:backupcourse', $context);
+require_login($course);
 
 $baseurl = new moodle_url('/blocks/exam_actions/export_exam.php', array('courseid'=>$courseid));
 $returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
 
 $site = get_site();
 
+$PAGE->set_course($course);
 $PAGE->set_url($baseurl);
 $PAGE->set_context($context);
 $PAGE->set_heading($site->fullname);
-$PAGE->set_pagelayout('standard');
+$PAGE->set_pagelayout('course');
+$PAGE->set_title(get_string('export_exam', 'block_exam_actions'));
 $PAGE->navbar->add(get_string('export_exam', 'block_exam_actions'));
 
 echo $OUTPUT->header();
 $activities = get_array_of_activities($courseid);
 
-$export = optional_param('export', '', PARAM_TEXT);
-if (empty($export)) {
-    echo $OUTPUT->heading(get_string('export_exam_title', 'block_exam_actions', $course->fullname));
-    echo html_writer::start_tag('DIV', array('class'=>'exam_box exam_list'));
+list($identifier, $shortname) = explode('_', $course->shortname, 2);
 
-    if (empty($activities)) {
-        echo $OUTPUT->box_start('generalbox boxaligncenter');
-        echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 4);
-        echo $OUTPUT->single_button($returnurl, get_string('back'));
-        echo $OUTPUT->box_end();
-    } else {
-        echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 4);
-        echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));
-        echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
-
-        foreach ($activities AS $act) {
-            $module = get_string('modulename', $act->mod);
-            $name = "{$act->name} ({$module})";
-            echo html_writer::tag('input', $name, array('type'=>'checkbox', 'name'=>"activities[{$act->cm}]", 'value'=>$name, 'class'=>'exam_checkbox'));
-            echo html_writer::empty_tag('BR');
-        }
-
-        echo html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'export', 'value'=>get_string('export', 'block_exam_actions')));
-        echo '&nbsp;';
-        echo html_writer::link($returnurl, get_string('cancel'));
-        echo html_writer::end_tag('form');
-    }
-    echo html_writer::end_tag('DIV');
-} else {
+if (optional_param('export', false, PARAM_TEXT)) {
     $export_activities = optional_param_array('activities', array(), PARAM_TEXT);
     if (empty($export_activities)) {
         print_error('no_selected_activities', 'block_exam_actions', $baseurl);
     }
     $data = array();
     $adminid = $DB->get_field('user', 'id', array('username'=>'admin'));
-    list($identifier, $shortname) = explode('_', $course->shortname, 2);
     foreach ($export_activities AS $cmid=>$act_name) {
         // executa backup com permissão de Admin em função de dados de usuários
         try {
@@ -122,5 +99,32 @@ if (empty($export)) {
     echo html_writer::table($table);
     echo $OUTPUT->single_button($returnurl, get_string('back'));
     echo html_writer::end_tag('DIV');
+} else {
+    echo $OUTPUT->heading(get_string('export_exam_title', 'block_exam_actions', $identifier));
+    echo html_writer::start_tag('DIV', array('class'=>'exam_box exam_list'));
+
+    if (empty($activities)) {
+        echo $OUTPUT->box_start('generalbox boxaligncenter');
+        echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 4);
+        echo $OUTPUT->single_button($returnurl, get_string('back'));
+        echo $OUTPUT->box_end();
+    } else {
+        echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 4);
+        echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));
+        echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
+
+        foreach ($activities AS $act) {
+            $module = get_string('modulename', $act->mod);
+            $name = "{$act->name} ({$module})";
+            echo html_writer::tag('input', $name, array('type'=>'checkbox', 'name'=>"activities[{$act->cm}]", 'value'=>$name, 'class'=>'exam_checkbox'));
+            echo html_writer::empty_tag('BR');
+        }
+
+        echo html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'export', 'value'=>get_string('export', 'block_exam_actions')));
+        echo html_writer::end_tag('form');
+    }
+    echo html_writer::end_tag('DIV');
 }
+
+echo $OUTPUT->render(new single_button($returnurl, get_string('back')));
 echo $OUTPUT->footer();

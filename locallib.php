@@ -34,6 +34,7 @@ require_once($CFG->libdir . '/coursecatlib.php');
 require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
+require_once($CFG->dirroot . '/group/lib.php');
 
 function exam_add_course($identifier, $remote_course) {
     global $DB;
@@ -80,7 +81,9 @@ function exam_add_course($identifier, $remote_course) {
     }
 }
 
-function exam_add_or_update_user($student, $customfields=array()) {
+// return a local user
+
+function exam_add_or_update_remote_user($r_user, $customfields=array()) {
     global $CFG, $DB;
 
     $userfields = array('username', 'idnumber', 'firstname', 'lastname', 'email');
@@ -89,17 +92,17 @@ function exam_add_or_update_user($student, $customfields=array()) {
 
     $default_auth_plugin = \local_exam_authorization\authorization::get_config('auth_plugin');
 
-    if ($user = $DB->get_record('user', array('username' => $student->username), $userfields_str)) {
+    if ($user = $DB->get_record('user', array('username' => $r_user->username), $userfields_str)) {
         $update = false;
         foreach ($userfields AS $field) {
-            if ( $user->$field != $student->$field) {
-                $user->$field = $student->$field;
+            if ( $user->$field != $r_user->$field) {
+                $user->$field = $r_user->$field;
                 $update = true;
             }
         }
 
         if (empty($default_auth_plugin)) {
-            $auth = in_array($student->auth, $auth_enabled) ? $student->auth : 'manual';
+            $auth = in_array($r_user->auth, $auth_enabled) ? $r_user->auth : 'manual';
         } else {
             $auth = $default_auth_plugin;
         }
@@ -120,17 +123,17 @@ function exam_add_or_update_user($student, $customfields=array()) {
         $user->mnethostid  = $CFG->mnet_localhost_id;
         $user->lang        = $CFG->lang;
         foreach ($userfields AS $field) {
-            $user->$field = $student->$field;
+            $user->$field = $r_user->$field;
         }
-        $user->auth = in_array($student->auth, $auth_enabled) ? $student->auth : 'manual';
+        $user->auth = in_array($r_user->auth, $auth_enabled) ? $r_user->auth : 'manual';
         $user->id = user_create_user($user, false);
         $password = '';
         $update_password = $user->auth == 'manual';
     }
 
     if ($update_password) {
-        if ($password != $student->password && !empty($student->password)) {
-            $password = $student->password;
+        if ($password != $r_user->password && !empty($r_user->password)) {
+            $password = $r_user->password;
             $DB->set_field('user', 'password', $password, array('id' => $user->id));
         }
         if (empty($password)) {
@@ -142,17 +145,18 @@ function exam_add_or_update_user($student, $customfields=array()) {
     if (!empty($customfields)) {
         $save = false;
         foreach ($customfields AS $f => $fid) {
-            if (isset($student->$f)) {
+            if (isset($r_user->$f)) {
                 $field = 'profile_field_' . $f;
-                $student->$field = $student->$f;
+                $user->$field = $r_user->$f;
                 $save = true;
             }
         }
         if ($save) {
-            profile_save_data($student);
+            profile_save_data($user);
         }
     }
 
+    $user->remote_id = $r_user->remote_id;
     return $user;
 }
 
@@ -176,7 +180,7 @@ function exam_enrol_students($identifier, $shortname, $course) {
     $userfields_str = 'id, ' . implode(', ', $userfields);
     $customfields = $DB->get_records_menu('user_info_field', null, 'shortname', 'shortname, id');
 
-    $students = exam_get_students($identifier, $shortname, $userfields, array_keys($customfields));
+    $r_students = exam_get_remote_students($identifier, $shortname, $userfields, array_keys($customfields));
     $sql = "SELECT ue.userid, MAX(ue.status) AS status
               FROM {enrol} e
               JOIN {user_enrolments} ue ON (ue.enrolid = e.id)
@@ -186,10 +190,10 @@ function exam_enrol_students($identifier, $shortname, $course) {
                AND e.courseid = :courseid
           GROUP BY ue.userid";
     $already_enrolled = $DB->get_records_sql($sql, array('courseid' => $course->id, 'roleid' => $roleid, 'contextcourse' => CONTEXT_COURSE));
-    
+
     $result_students = array();
-    foreach ($students AS $student) {
-        $student = exam_add_or_update_user($student, $customfields);
+    foreach ($r_students AS $r_student) {
+        $student = exam_add_or_update_remote_user($r_student, $customfields);
 
         if (isset($already_enrolled[$student->id])) {
             $student->enrol = $already_enrolled[$student->id]->status;
@@ -311,7 +315,7 @@ function exam_mount_category_tree($username) {
 }
 
 
-function exam_get_students($identifier, $course_shortname, $userfields=array(), $customfields=array()) {
+function exam_get_remote_students($identifier, $course_shortname, $userfields=array(), $customfields=array()) {
     if (empty($userfields)) {
         $userfields = array('username');
     }
@@ -320,17 +324,17 @@ function exam_get_students($identifier, $course_shortname, $userfields=array(), 
     $params = array('shortname' => $course_shortname);
     $params['userfields'] = array_merge($userfields, $customfields);
 
-    $students = array();
+    $r_students = array();
     foreach (\local_exam_authorization\authorization::call_remote_function($identifier, $function, $params) as $st) {
-        $student = new stdClass();
-        $student->remote_id = $st->id;
+        $r_student = new stdClass();
+        $r_student->remote_id = $st->id;
         foreach ($st->userfields AS $obj) {
             $field = $obj->field;
-            $student->$field = $obj->value;
+            $r_student->$field = $obj->value;
         }
-        $students[$student->remote_id] = $student;
+        $r_students[$r_student->remote_id] = $r_student;
     }
-    return $students;
+    return $r_students;
 }
 
 function exam_get_remote_categories($identifier, $categoryids) {
@@ -406,4 +410,89 @@ function exam_export_activity($identifier, $shortname, $username, $backup_file) 
     $return = \local_exam_authorization\authorization::call_remote_function($identifier, $function, $params);
 
     return $return;
+}
+
+function sync_groupings_groups_and_members($identifier, $shortname, $course, $remote_courseid,
+                $synchronize=false, $remote_groupingids_to_create=array(), $remote_groupids_to_create=array()) {
+    global $DB;
+
+    // Create new groupings
+
+    $r_groupings = \local_exam_authorization\authorization::call_remote_function($identifier,'core_group_get_course_groupings', array('courseid'=>$remote_courseid));
+    $remote_groupings = array();
+    foreach ($r_groupings AS $r_grouping) {
+        $r_grouping->localid = groups_get_grouping_by_name($course->id, $r_grouping->name);
+        if ($synchronize && !$r_grouping->localid && in_array($r_grouping->id, $remote_groupingids_to_create)) {
+            $grouping = new stdClass();
+            $grouping->courseid = $course->id;
+            $grouping->name     = $r_grouping->name;
+            $r_grouping->localid = groups_create_grouping($grouping);
+        }
+        $remote_groupings[$r_grouping->id] = $r_grouping;
+    }
+
+    // Create new groups
+
+    $r_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_course_groups', array('courseid'=>$remote_courseid));
+    $remote_groups = array();
+    foreach ($r_groups AS $r_group) {
+        $r_group->localid = groups_get_group_by_name($course->id, $r_group->name);
+        if ($synchronize && !$r_group->localid && in_array($r_group->id, $remote_groupids_to_create)) {
+            $group = new stdClass();
+            $group->courseid = $course->id;
+            $group->name     = $r_group->name;
+            $r_group->localid = groups_create_group($group);
+        }
+        $remote_groups[$r_group->id] = $r_group;
+    }
+
+    // Assign groups to groupings
+
+    $params = array('returngroups'=>1, 'groupingids'=>array_keys($remote_groupings));
+    $remote_groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
+    if ($synchronize && !empty($remote_groupings)) {
+        foreach ($remote_groupings_groups AS $r_grouping) {
+            if ($remote_groupings[$r_grouping->id]->localid) {
+                foreach ($r_grouping->groups AS $r_group) {
+                    if ($remote_groups[$r_group->id]->localid) {
+                        groups_assign_grouping($remote_groupings[$r_grouping->id]->localid, $remote_groups[$r_group->id]->localid);
+                    }
+                }
+            }
+        }
+    }
+
+    // Sync group member
+
+    if ($synchronize && !empty($remote_groups)) {
+        $students = exam_enrol_students($identifier, $shortname, $course);
+        $r_usernames = array();
+        foreach($students AS $st) {
+            $r_usernames[$st->remote_id] = $st->username;
+        }
+
+        $r_groups_members = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_group_members', array('groupids'=>array_keys($remote_groups)));
+        foreach ($r_groups_members AS $r_group_members) {
+            if ($remote_groups[$r_group_members->groupid]->localid) {
+                $groupid = $remote_groups[$r_group_members->groupid]->localid;
+                $group_members = groups_get_members($groupid, 'u.id');
+                foreach ($r_group_members->userids AS $r_userid) {
+                    if (isset($r_usernames[$r_userid])) {
+                        if ($userid = $DB->get_field('user', 'id', array('username'=>$r_usernames[$r_userid]))) {
+                            if (isset($group_members[$userid])) {
+                                unset($group_members[$userid]);
+                            } else {
+                                groups_add_member($groupid, $userid);
+                            }
+                        }
+                    }
+                }
+                foreach ($group_members AS $userid=>$gm) {
+                    groups_remove_member($groupid, $userid);
+                }
+            }
+        }
+    }
+
+    return array($remote_groupings, $remote_groups, $remote_groupings_groups);
 }

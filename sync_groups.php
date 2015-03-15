@@ -31,12 +31,15 @@
 
 require('../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
-require_once($CFG->dirroot . '/group/lib.php');
-
-require_login();
 
 $courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
+$context = context_course::instance($courseid);
+
+require_capability('moodle/course:managegroups', $context);
+require_login($course);
+
+$baseurl = new moodle_url('/blocks/exam_actions/sync_groups', array('courseid'=>$courseid));
 $returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
 
 if (optional_param('cancel', false, PARAM_TEXT)) {
@@ -44,25 +47,23 @@ if (optional_param('cancel', false, PARAM_TEXT)) {
     exit;
 }
 
-$groupingids = optional_param_array('groupingids', array(), PARAM_INT);
-$groupids = optional_param_array('groupids', array(), PARAM_INT);
-$synchronize = optional_param('synchronize', false, PARAM_TEXT);
-
-$context = context_course::instance($courseid);
-if (!has_capability('moodle/course:managegroups', $context)) {
-    print_error('no_permission', 'block_exam_actions');
-}
-
-$baseurl = new moodle_url('/blocks/exam_actions/sync_groups', array('courseid'=>$courseid));
+$site = get_site();
 
 $PAGE->set_course($course);
 $PAGE->set_url($baseurl);
 $PAGE->set_context($context);
-$site = get_site();
 $PAGE->set_heading($site->fullname);
 $PAGE->set_pagelayout('course');
 $PAGE->set_title(get_string('sync_groups', 'block_exam_actions'));
-$PAGE->navbar->add(get_string('sync_groups', 'block_exam_actions'));
+$PAGE->navbar->add(get_string('sync_groups_title', 'block_exam_actions'));
+
+$synchronize = optional_param('synchronize', false, PARAM_TEXT);
+$groupingids = optional_param_array('groupingids', array(), PARAM_INT);
+$groupids = optional_param_array('groupids', array(), PARAM_INT);
+
+$map_group = optional_param('map_group', false, PARAM_TEXT);
+$local_groupid_to_map = optional_param('local_groupid_to_map', 0, PARAM_INT);
+$remote_groupid_to_map = optional_param('remote_groupid_to_map', 0, PARAM_INT);
 
 list($identifier, $shortname) = explode('_', $course->shortname, 2);
 
@@ -72,97 +73,63 @@ if ($remote_courseid <= 0) {
     print_error('no_remote_course_found', 'block_exam_actions');
 }
 
-$gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_course_groupings', array('courseid'=>$remote_courseid));
-$groupings = array();
-foreach ($gs AS $g) {
-    $g->localid = groups_get_grouping_by_name($courseid, $g->name);
-    if ($synchronize && !$g->localid && in_array($g->id, $groupingids)) {
-        $grouping = new stdClass();
-        $grouping->courseid = $courseid;
-        $grouping->name     = $g->name;
-        $g->localid = groups_create_grouping($grouping);
-    }
-    $groupings[$g->id] = $g;
-}
+list($remote_groupings, $remote_groups, $remote_groupings_groups) =
+    sync_groupings_groups_and_members($identifier, $shortname, $course, $remote_courseid, $synchronize, $groupingids, $groupids);
 
-$gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_course_groups', array('courseid'=>$remote_courseid));
-$groups = array();
-foreach ($gs AS $g) {
-    $g->localid = groups_get_group_by_name($courseid, $g->name);
-    if ($synchronize && !$g->localid && in_array($g->id, $groupids)) {
-        $group = new stdClass();
-        $group->courseid = $courseid;
-        $group->name     = $g->name;
-        $g->localid = groups_create_group($group);
-    }
-    $groups[$g->id] = $g;
-}
-if (!empty($groupings)) {
-    $params = array('returngroups'=>1, 'groupingids'=>array_keys($groupings));
-    $groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
-    foreach ($groupings_groups AS $gg) {
-        if ($groupings[$gg->id]->localid && in_array($gg->id, $groupingids)) {
-            foreach ($gg->groups AS $g) {
-                if ($groups[$g->id]->localid && in_array($g->id, $groupids)) {
-                    groups_assign_grouping($groupings[$gg->id]->localid, $groups[$g->id]->localid);
-                }
-            }
-        }
-    }
-}
-
+$message = false;
+$message_type = 'exam_message';
 if ($synchronize) {
-    $students = exam_enrol_students($identifier, $shortname, $course);
-    $gs = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_group_members', array('groupids'=>array_keys($groups)));
-    foreach ($gs AS $gms) {
-        if ($groups[$gms->groupid]->localid) {
-            $localid = $groups[$gms->groupid]->localid;
-            $local_users = groups_get_members($localid, 'u.id');
-            foreach ($gms->userids AS $uid) {
-                if (isset($students[$uid])) {
-                    if ($userid = $DB->get_field('user', 'id', array('username'=>$students[$uid]->username))) {
-                        if (isset($local_users[$userid])) {
-                            unset($local_users[$userid]);
-                        } else {
-                            groups_add_member($localid, $userid);
-                        }
-                    }
-                }
-            }
-            foreach ($local_users AS $userid=>$gm) {
-                groups_remove_member($localid, $userid);
-            }
-        }
+    $message = 'synced_groups_msg';
+} else if ($map_group) {
+    $local_group = groups_get_group($local_groupid_to_map);
+    if ($local_group && isset($remote_groups[$remote_groupid_to_map])) {
+        $local_group->name = $remote_groups[$remote_groupid_to_map]->name;
+        groups_update_group($local_group);
+        list($remote_groupings, $remote_groups, $remote_groupings_groups) =
+            sync_groupings_groups_and_members($identifier, $shortname, $course, $remote_courseid, $synchronize, $groupingids, $groupids);
+        $message = 'mapped_group_msg';
+    } else {
+        $message = 'not_mapped_group_msg';
+        $message_type = 'exam_error';
     }
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('sync_groups_title', 'block_exam_actions', $course->fullname));
+echo $OUTPUT->heading(get_string('sync_groups_title', 'block_exam_actions') . $OUTPUT->help_icon('sync_groups', 'block_exam_actions'));
 
-echo html_writer::start_tag('DIV', array('class'=>'exam_box exam_list'));
+if ($message) {
+    echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
+    echo $OUTPUT->heading(get_string($message, 'block_exam_actions'), 5, $message_type);
+    echo $OUTPUT->box_end();
+}
 
 echo html_writer::start_tag('form', array('method'=>'post'));
+
+echo $OUTPUT->box_start('generalbox boxalignleft boxwidthwide exam_box exam_list');
+
 echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
 
 $has_group = false;
 $grouped = array();
 
-if (!empty($groupings)) {
+if (!empty($remote_groupings)) {
     echo html_writer::tag('B', get_string('groupings', 'block_exam_actions'));
     echo html_writer::start_tag('ul');
-    foreach ($groupings_groups As $gr) {
+    foreach ($remote_groupings_groups As $gr) {
         echo html_writer::start_tag('li');
-        $checked = $groupings[$gr->id]->localid ? true : false;
+        $checked = $remote_groupings[$gr->id]->localid ? true : false;
         $params = $checked ? array('disabled'=>'disabled') : null;
         echo html_writer::checkbox('groupingids[]', $gr->id, $checked, $gr->name, $params);
         echo html_writer::start_tag('ul');
-        foreach ($gr->groups as $g) {
-            $checked = $groups[$g->id]->localid ? true : false;
-            $params = $checked ? array('disabled'=>'disabled') : null;
-            $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, $g->name, $params);
-            echo html_writer::tag('li', $checkbox);
-            $grouped[$g->id] = true;
-            $has_group = true;
+        if(isset($gr->groups)) {
+            foreach ($gr->groups as $g) {
+                $checked = $remote_groups[$g->id]->localid ? true : false;
+                $params = $checked ? array('disabled'=>'disabled') : null;
+                $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, $g->name, $params);
+                echo html_writer::tag('li', $checkbox);
+                $grouped[$g->id] = true;
+                $has_group = true;
+            }
         }
         echo html_writer::end_tag('ul');
         echo html_writer::end_tag('li');
@@ -170,12 +137,12 @@ if (!empty($groupings)) {
     echo html_writer::end_tag('ul');
 }
 
-if (count($groups) > count($grouped)) {
+if (count($remote_groups) > count($grouped)) {
     echo html_writer::tag('B', get_string('groups', 'block_exam_actions'));
     echo html_writer::start_tag('ul');
-    foreach ($groups AS $gid=>$g) {
+    foreach ($remote_groups AS $gid=>$g) {
         if (!isset($grouped[$gid])) {
-            $checked = $groups[$g->id]->localid ? true : false;
+            $checked = $remote_groups[$g->id]->localid ? true : false;
             $params = $checked ? array('disabled'=>'disabled') : null;
             $checkbox = html_writer::checkbox('groupids[]', $g->id, $checked, $g->name, $params);
             echo html_writer::tag('li', $checkbox);
@@ -186,15 +153,53 @@ if (count($groups) > count($grouped)) {
 }
 
 if ($has_group) {
-    $sync_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'synchronize', 'value'=>get_string('sync_groups', 'block_exam_actions')));
+    $sync_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'synchronize', 'value'=>get_string('sync_groups_button', 'block_exam_actions')));
 } else {
     $sync_button = '';
     echo $OUTPUT->heading(get_string('no_groups_to_sync', 'block_exam_actions'));
 }
-$cancel_button = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'cancel', 'value'=>get_string('back')));
-echo html_writer::tag('div', $sync_button . $cancel_button, array('class' => 'buttons'));
+echo html_writer::tag('div', $sync_button, array('class' => 'buttons'));
 
-html_writer::end_tag('form');
+echo $OUTPUT->box_end();
 
-echo html_writer::end_tag('DIV');
+// ----------------------------------------------------------------------------------------
+
+$not_mapped_groups = groups_get_all_groups($course->id);
+foreach ($remote_groups AS $r_group) {
+    if ($r_group->localid) {
+        unset($not_mapped_groups[$r_group->localid]);
+    }
+}
+
+if (!empty($not_mapped_groups)) {
+    echo $OUTPUT->box_start('generalbox boxalignleft boxwidthwide exam_box exam_list');
+
+    echo html_writer::tag('B', get_string('not_mapped_groups', 'block_exam_actions'));
+    echo html_writer::start_tag('ul');
+
+    foreach ($not_mapped_groups AS $gid=>$g) {
+        $radio = html_writer::tag('input', $g->name, array('type' => 'radio', 'name' => 'local_groupid_to_map', 'value' => $gid));
+        echo html_writer::tag('li', $radio);
+    }
+    echo html_writer::end_tag('ul');
+
+    $remote_groups_not_synced = array();
+    foreach ($remote_groups AS $gid=>$g) {
+        if (!$remote_groups[$g->id]->localid) {
+            $remote_groups_not_synced[$gid] = $g->name;
+        }
+    }
+
+    if (!empty($remote_groups_not_synced)) {
+        $map_group = html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'map_group', 'value'=>get_string('map_group_button', 'block_exam_actions')));
+        $select_group = html_writer::select($remote_groups_not_synced, 'remote_groupid_to_map', false, array(''=>'choosedots'));
+        echo html_writer::tag('div', $map_group . $select_group, array('class' => 'buttons'));
+    }
+
+    echo $OUTPUT->box_end();
+}
+
+echo html_writer::end_tag('form');
+
+echo $OUTPUT->render(new single_button($returnurl, get_string('back')));
 echo $OUTPUT->footer();

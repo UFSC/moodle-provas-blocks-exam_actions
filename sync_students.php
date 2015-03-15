@@ -32,23 +32,23 @@
 require('../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
-require_login();
-
 $courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 $context = context_course::instance($courseid);
-if (!has_capability('block/exam_actions:conduct_exam', $context) &&
-	!has_capability('moodle/course:update', $context)) {
-    print_error('no_permission', 'block_exam_actions');
-}
+
+require_capability('block/exam_actions:conduct_exam', $context);
+require_login($course);
 
 $baseurl = new moodle_url('/blocks/exam_actions/sync_students.php', array('courseid'=>$courseid));
+$returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
+
+$site = get_site();
+
 $PAGE->set_course($course);
 $PAGE->set_url($baseurl);
 $PAGE->set_context($context);
-$site = get_site();
 $PAGE->set_heading($site->fullname);
-$PAGE->set_pagelayout('standard');
+$PAGE->set_pagelayout('course');
 $PAGE->set_title(get_string('sync_students', 'block_exam_actions'));
 $PAGE->navbar->add(get_string('sync_students', 'block_exam_actions'));
 
@@ -87,10 +87,11 @@ foreach ($customfields AS $f=>$name) {
 
 $table->data = $data;
 
-echo $OUTPUT->heading(get_string('synced_students', 'block_exam_actions', $course->fullname));
+echo $OUTPUT->heading(get_string('sync_students_title', 'block_exam_actions'));
 
 echo html_writer::start_tag('DIV', array('class'=>'exam_box'));
 echo html_writer::table($table);
 echo html_writer::end_tag('DIV');
 
+echo $OUTPUT->render(new single_button($returnurl, get_string('back')));
 echo $OUTPUT->footer();

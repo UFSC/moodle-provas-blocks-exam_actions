@@ -155,6 +155,19 @@ class block_exam_actions extends block_base {
         return array('my' => true, 'course-view' => true, 'site' => true);
     }
 
+    /**
+     * The block should only be dockable when the title of the block is not empty
+     * and when parent allows docking.
+     *
+     * @return bool
+     */
+    public function instance_can_be_docked() {
+        global $PAGE;
+
+        return !is_a($PAGE->context, 'context_course') || $PAGE->course->id != 1;
+
+    }
+
     private function append_messages() {
         global $SESSION, $OUTPUT;
 

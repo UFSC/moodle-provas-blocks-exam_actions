@@ -41,9 +41,9 @@ $string['title'] = 'Moodle Provas';
 $string['no_permission'] = 'Você não tem permissão para realizar esta operação.';
 $string['no_remote_course_found'] = 'Não foi localizado curso equivamente no Moodle Remoto.';
 
-$string['groupings'] = 'Agrupamentos e respectivos grupos:';
-$string['groups'] = 'Grupos não pertencentes a agrupamentos:';
-
+$string['groupings'] = 'Agrupamentos remotos e respectivos grupos:';
+$string['groups'] = 'Grupos remotos não pertencentes a agrupamentos:';
+$string['not_mapped_groups'] = 'Grupos locais sem correspondência no curso remoto';
 
 $string['review_permissions'] = 'Revisar minhas permissões';
 $string['reviewed_permissions'] = 'Suas permissões foram revistas.';
@@ -51,8 +51,8 @@ $string['remote_courses'] = 'Cursos remotos';
 $string['remote_courses_msg'] = 'Abaixo está a relação de cursos das instalações remotos de Moodle ligadados ao Moodle Provas.
     Clique no nome do curso para ter acesso a ele (caso já esteja disponível) ou para disponibilizá-lo no Moodle Provas.';
 $string['export_exam'] = 'Exportar atividades';
-$string['export_exam_title'] = 'Exportar atividades: \'{$a}\'';
-$string['export_exam_desc'] = 'Selecione abaixo as atividades a serem exportadas para o Moodle de Origem:';
+$string['export_exam_title'] = 'Exportando atividades para Moodle: \'{$a}\'';
+$string['export_exam_desc'] = 'Selecione abaixo as atividades a serem exportadas para o Moodle remoto:';
 $string['export'] = 'Exportar';
 $string['export_result'] = 'Resultado da exportação';
 $string['access_key'] = 'Chave de acesso';
@@ -64,11 +64,26 @@ $string['student_access'] = 'Acessos dos estudantes';
 $string['release_computer'] = 'Liberar computador';
 $string['release_this_computer'] = 'Liberar computador para realizar prova';
 $string['monitor_exam'] = 'Monitorar prova';
-$string['monitor_exam_title'] = 'Monitorar prova: \'{$a}\'';
+$string['monitor_exam_title'] = 'Monitoramento de prova';
+
 $string['sync_students'] = 'Revisar inscrições';
-$string['synced_students'] = 'Estudantes Inscritos: \'{$a}\'';
+$string['sync_students_title'] = 'Estudantes inscritos após revisão';
 $string['sync_groups'] = 'Sincronizar grupos';
-$string['sync_groups_title'] = 'Sincronizar grupos: \'{$a}\'';
+$string['sync_groups_help'] = 'Os grupos e agrupamentos do Moodle remoto podem ser sincronizados no Moodle Provas, incluindo seus membros.
+    Marque abaixo os grupos e agrupamentos que você deseja sincronizar. Observe, contudo, que o os grupos e os grupamentos existem de forma independente no Moodle.
+        Assim, a seleção de um agrupamento não implica necessariamente que todos os seus grupos devam ser sincronizados. É necessário, portanto, indicar quais de seus grupos devam ser sincronizados.<br><br>
+    A relação entre os grupos e agrupamentos locais e remotos é feito com base em seus nomes. Isto significa que se um nome for alterado,
+    a relação entre os grupos se perderá, sendo necessário renomear um dos dois (local ou remoto) de forma a que voltem a ficar iguais.<br><br>
+    Se já houver um grupo ou agrupamento local com o mesmo nome de um remoto, ele já aparecerá marcado, indicando que seus membros serão sincronizados.<br><br>
+    Os grupos locais para os quais não haja o correspondente grupo no Moodle remoto aparecem listados no final. Caso haja algum opção de grupo remoto para o qual o grupo
+    local possa ser mapeado, aparecerá caixa de seleção e botão que possibilita renomear o grupo local com base no grupo remoto.';
+$string['sync_groups_button'] = 'Criar grupos/agrupamentos e sincronizar membros';
+$string['sync_groups_title'] = 'Sincronizando grupos e agrupamentos';
+$string['synced_groups_msg'] = 'Os grupos e agrupamentos foram criados e seus membros foram sincronizados';
+$string['map_group_button'] = 'Renomear grupo local selecionado e mapear para: ';
+$string['mapped_group_msg'] = 'O grupo local foi renomeado e os grupos e agrupamento foram resincronizados';
+$string['not_mapped_group_msg'] = 'Não foi possível renomear o grupo local. Os grupos local e remoto foram corretamente selecionados?';
+
 $string['computer_released'] = 'Computador liberado para realizar prova: \'{$a}\'';
 $string['new_course'] = 'Disponibilizar novo curso';
 
@@ -79,14 +94,18 @@ $string['enablecourse'] = 'Disponibilizando curso: \'{$a}\'';
 $string['confirmenablecourse'] = 'Você realmente deseja disponibilizar o curso \'{$a}\' no Moodle Provas?';
 
 $string['no_activities_to_export'] = 'Não há atividades a serem exportadas';
-$string['no_selected_activities'] = 'Não foi selecionada nenhuma atividade a ser exportada para o Moodle de Origem';
+$string['no_selected_activities'] = 'Não foi selecionada nenhuma atividade a ser exportada para o Moodle remoto';
 
 $string['already_added'] = ' (já disponível)';
 $string['no_proctor'] = 'Sem permissão para gerar chaves de acesso.';
 $string['no_monitor'] = 'Sem permissão para monitorar provas.';
 $string['no_editor'] = 'Sem permissão para editar ou disponibilizar este curso.';
 $string['generating_access_key'] = 'Gerando chave de acesso';
-$string['generating_access_key_title'] = 'As chaves de acesso são necessárias para liberar os computadores que serão utilizados pelos estudantes para realizar provas.';
+$string['generating_access_key_help'] = 'Chaves de acesso são necessárias para liberar os computadores que serão utilizados pelos estudantes para realizar provas.
+    Elas são geradas por pessoas que tenha permissão para tal, estando vinculadas a cursos Moodle específicos. Isto significa que ao ser liberado, um computador 
+    só pode ser utilizado para realizar prova do curso Moodle correspondente à chave utilizada na liberação.<br><br>
+    Uma mesma chave pode ser utilizada para liberar vários computadores e podem ser geradas várias chaves durante a realização de uma prova
+    (em caso de expiração do tempo de validade, por exemplo).';
 $string['no_course_to_generate_key'] = 'Não há cursos disponíveis/visíveis para os quais você possa gerar chave de acesso';
 
 $string['course'] = 'Curso';

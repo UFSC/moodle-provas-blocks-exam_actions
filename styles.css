@@ -1,6 +1,6 @@
 .block_exam_actions .computer_released {color: DarkGreen;}
 
-.exam_box {width: 90%; margin-left: auto; margin-right: auto;}
+.exam_box {border: 1px solid; border-color: LightGray; border-radius: 5px; padding: 15px;}
 
 .exam_list li {list-style: none;}
 
@@ -10,7 +10,8 @@
 .exam_box .enrolled {color: DarkGreen;}
 .exam_box .unenrolled {color: Orange;}
 
-.exam_warning {color: DarkBlue}
+.exam_message {color: Green}
+.exam_warning {color: Blue}
 .exam_error {color: Red}
 
 /* CSS Tree menu styles */

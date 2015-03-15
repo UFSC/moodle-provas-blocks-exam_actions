@@ -32,25 +32,25 @@
 require('../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
-require_login();
-
 $courseid = required_param('courseid', PARAM_INT);
-$course = $DB->get_record('course', array('id'=>$courseid));
+$course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 $context = context_course::instance($courseid);
-if (!has_capability('block/exam_actions:monitor_exam', $context)) {
-    print_error('no_monitor', 'block_exam_actions');
-}
+
+require_capability('block/exam_actions:monitor_exam', $context);
+require_login($course);
 
 $baseurl = new moodle_url('/blocks/exam_actions/monitor_exam.php', array('courseid'=>$courseid));
+$returnurl = new moodle_url('/course/view.php', array('id'=>$courseid));
+
+$site = get_site();
+
 $PAGE->set_course($course);
 $PAGE->set_url($baseurl);
 $PAGE->set_context($context);
-$site = get_site();
 $PAGE->set_heading($site->fullname);
 $PAGE->set_pagelayout('course');
-$PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('monitor_exam', 'block_exam_actions'));
-$PAGE->navbar->add(get_string('monitor_exam', 'block_exam_actions'));
+$PAGE->navbar->add(get_string('monitor_exam_title', 'block_exam_actions'));
 
 echo $OUTPUT->header();
 
@@ -65,7 +65,7 @@ foreach ($tab_items AS $act) {
 $action = optional_param('action', '' , PARAM_TEXT);
 $action = isset($tabs[$action]) ? $action : reset($tab_items);
 
-echo $OUTPUT->heading(get_string('monitor_exam_title', 'block_exam_actions', $course->fullname));
+echo $OUTPUT->heading(get_string('monitor_exam_title', 'block_exam_actions'));
 print_tabs(array($tabs), $action);
 
 switch($action) {
@@ -151,4 +151,5 @@ if (isset($table)) {
     echo html_writer::end_tag('DIV');
 }
 
+echo $OUTPUT->render(new single_button($returnurl, get_string('back')));
 echo $OUTPUT->footer();
