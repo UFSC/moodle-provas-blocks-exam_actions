@@ -151,5 +151,5 @@ if (isset($table)) {
     echo html_writer::end_tag('DIV');
 }
 
-echo $OUTPUT->render(new single_button($returnurl, get_string('back')));
+echo $OUTPUT->single_button($returnurl, get_string('back'));
 echo $OUTPUT->footer();

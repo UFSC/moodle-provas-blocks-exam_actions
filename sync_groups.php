@@ -201,5 +201,5 @@ if (!empty($not_mapped_groups)) {
 
 echo html_writer::end_tag('form');
 
-echo $OUTPUT->render(new single_button($returnurl, get_string('back')));
+echo $OUTPUT->single_button($returnurl, get_string('back'));
 echo $OUTPUT->footer();

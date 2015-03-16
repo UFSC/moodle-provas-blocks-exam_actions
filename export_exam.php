@@ -97,7 +97,6 @@ if (optional_param('export', false, PARAM_TEXT)) {
 
     $table->data = $data;
     echo html_writer::table($table);
-    echo $OUTPUT->single_button($returnurl, get_string('back'));
     echo html_writer::end_tag('DIV');
 } else {
     echo $OUTPUT->heading(get_string('export_exam_title', 'block_exam_actions', $identifier));
@@ -106,7 +105,6 @@ if (optional_param('export', false, PARAM_TEXT)) {
     if (empty($activities)) {
         echo $OUTPUT->box_start('generalbox boxaligncenter');
         echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 4);
-        echo $OUTPUT->single_button($returnurl, get_string('back'));
         echo $OUTPUT->box_end();
     } else {
         echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 4);
@@ -126,5 +124,5 @@ if (optional_param('export', false, PARAM_TEXT)) {
     echo html_writer::end_tag('DIV');
 }
 
-echo $OUTPUT->render(new single_button($returnurl, get_string('back')));
+echo $OUTPUT->single_button($returnurl, get_string('back'));
 echo $OUTPUT->footer();

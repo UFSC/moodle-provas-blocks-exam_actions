@@ -108,9 +108,10 @@ if ($editform->is_cancelled()) {
         echo html_writer::table($table);
         echo $OUTPUT->box_end();
 
-        $button_new = new single_button($baseurl, get_string('new_access_key', 'block_exam_actions'));
-        $button_back = new single_button($returnurl, get_string('back'));
-        echo html_writer::tag('div', $OUTPUT->render($button_new) . $OUTPUT->render($button_back));
+        $button_new = $OUTPUT->single_button($baseurl, get_string('new_access_key', 'block_exam_actions'));
+        $button_back = $OUTPUT->single_button($returnurl, get_string('back'));
+
+        echo html_writer::tag('div', $button_new . $button_back);
 
         echo $OUTPUT->footer();
     } else {
@@ -122,7 +123,8 @@ if ($editform->is_cancelled()) {
     echo "<br/>";
 
     if (empty($courses)) {
-        echo $OUTPUT->heading(get_string('no_course_to_generate_key', 'block_exam_actions'));
+        echo $OUTPUT->heading(get_string('no_course_to_generate_key', 'block_exam_actions'), 4);
+        echo $OUTPUT->single_button($returnurl, get_string('back'));
     } else {
         echo $OUTPUT->box_start('generalbox boxalignleft boxwidthwide exam_box');
         $editform->display();
