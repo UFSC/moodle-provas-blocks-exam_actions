@@ -65,7 +65,7 @@ foreach ($tab_items AS $act) {
 $action = optional_param('action', '' , PARAM_TEXT);
 $action = isset($tabs[$action]) ? $action : reset($tab_items);
 
-echo $OUTPUT->heading(get_string('monitor_exam_title', 'block_exam_actions'));
+echo $OUTPUT->heading(get_string('monitor_exam_title', 'block_exam_actions'), 3);
 print_tabs(array($tabs), $action);
 
 switch($action) {

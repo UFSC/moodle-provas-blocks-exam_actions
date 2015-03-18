@@ -50,11 +50,11 @@ $string['reviewed_permissions'] = 'Suas permissões foram revistas.';
 $string['remote_courses'] = 'Cursos remotos';
 $string['remote_courses_msg'] = 'Abaixo está a relação de cursos das instalações remotos de Moodle ligadados ao Moodle Provas.
     Clique no nome do curso para ter acesso a ele (caso já esteja disponível) ou para disponibilizá-lo no Moodle Provas.';
-$string['export_exam'] = 'Exportar atividades';
-$string['export_exam_title'] = 'Exportando atividades para Moodle: \'{$a}\'';
-$string['export_exam_desc'] = 'Selecione abaixo as atividades a serem exportadas para o Moodle remoto:';
-$string['export'] = 'Exportar';
-$string['export_result'] = 'Resultado da exportação';
+$string['export_exam'] = 'Transpor atividades';
+$string['export_exam_title'] = 'Transpondo atividades para Moodle: \'{$a}\'';
+$string['export_exam_desc'] = 'Selecione abaixo as atividades a serem transpostas para o Moodle remoto:';
+$string['export'] = 'Transpor';
+$string['export_result'] = 'Resultado da transposição';
 $string['access_key'] = 'Chave de acesso';
 $string['new_access_key'] = 'Nova chave de acesso';
 $string['generate_access_key'] = 'Gerar chave de acesso';
@@ -66,9 +66,9 @@ $string['release_this_computer'] = 'Liberar computador para realizar prova';
 $string['monitor_exam'] = 'Monitorar prova';
 $string['monitor_exam_title'] = 'Monitoramento de prova';
 
-$string['sync_students'] = 'Revisar inscrições';
-$string['sync_students_title'] = 'Estudantes inscritos após revisão';
-$string['sync_groups'] = 'Sincronizar grupos';
+$string['sync_students'] = 'Sincronizar inscrições de estudantes';
+$string['sync_students_title'] = 'Sincronização completada. Situação atual dos estudantes';
+$string['sync_groups'] = 'Sincronizar grupos e membros';
 $string['sync_groups_help'] = 'Os grupos e agrupamentos do Moodle remoto podem ser sincronizados no Moodle Provas, incluindo seus membros.
     Marque abaixo os grupos e agrupamentos que você deseja sincronizar. Observe, contudo, que o os grupos e os grupamentos existem de forma independente no Moodle.
         Assim, a seleção de um agrupamento não implica necessariamente que todos os seus grupos devam ser sincronizados. É necessário, portanto, indicar quais de seus grupos devam ser sincronizados.<br><br>
@@ -93,8 +93,8 @@ $string['no_course'] = 'Não foi localizado curso local: \'{$a}\'';
 $string['enablecourse'] = 'Disponibilizando curso: \'{$a}\'';
 $string['confirmenablecourse'] = 'Você realmente deseja disponibilizar o curso \'{$a}\' no Moodle Provas?';
 
-$string['no_activities_to_export'] = 'Não há atividades a serem exportadas';
-$string['no_selected_activities'] = 'Não foi selecionada nenhuma atividade a ser exportada para o Moodle remoto';
+$string['no_activities_to_export'] = 'Não há atividades a serem transpostas';
+$string['no_selected_activities'] = 'Não foi selecionada nenhuma atividade a ser transposta para o Moodle remoto';
 
 $string['already_added'] = ' (já disponível)';
 $string['no_proctor'] = 'Sem permissão para gerar chaves de acesso.';
@@ -128,7 +128,7 @@ $string['verify_client_host_help'] = 'Verificar se o computador onde será utili
 
 $string['empty_course'] = 'É necessário selecionar o curso para o qual a chave de acesso é válida';
 $string['empty_backup_file'] = 'Falha na geração do backup da atividade: arquivo vazio';
-$string['activity_exported'] = 'Atividade foi exportada';
+$string['activity_exported'] = 'Atividade foi transposta';
 
 $string['cd_needed'] = 'É necessário utilizar o CD (ou pendrive) de provas para que este computador possa ser liberado para realizar uma prova.';
 $string['invalid_cd_version'] = 'A versão do CD (ou pendrive) de provas é inválida ou muito antiga.';
@@ -150,4 +150,6 @@ $string['unenrolled'] = 'Desinscrito';
 $string['no_function'] = 'Não foi identificada nenhuma função/papel com o qual neste momento você possa realizar ações sobre cursos neste ambiente.
     No caso específico de acesso de estudantes para a realização de provas, observe que necessária a liberação prévia do computador via chave de acesso gerada pelo responsável por sua aplicação.';
 $string['warnings'] = 'Avisos';
+$string['must_logout'] = 'Para liberar este computador para que um estudante realize prova é necessário que você saia (encerre sua sessão).
+    <br><br>Encerrar sua sessão agora?';
 ?>

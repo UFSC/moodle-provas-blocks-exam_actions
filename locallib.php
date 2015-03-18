@@ -448,14 +448,18 @@ function sync_groupings_groups_and_members($identifier, $shortname, $course, $re
 
     // Assign groups to groupings
 
-    $params = array('returngroups'=>1, 'groupingids'=>array_keys($remote_groupings));
-    $remote_groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
-    if ($synchronize && !empty($remote_groupings)) {
-        foreach ($remote_groupings_groups AS $r_grouping) {
-            if ($remote_groupings[$r_grouping->id]->localid) {
-                foreach ($r_grouping->groups AS $r_group) {
-                    if ($remote_groups[$r_group->id]->localid) {
-                        groups_assign_grouping($remote_groupings[$r_grouping->id]->localid, $remote_groups[$r_group->id]->localid);
+    if (empty($remote_groupings)) {
+        $remote_groupings_groups = array();
+    } else {
+        $params = array('returngroups'=>1, 'groupingids'=>array_keys($remote_groupings));
+        $remote_groupings_groups = \local_exam_authorization\authorization::call_remote_function($identifier, 'core_group_get_groupings', $params);
+        if ($synchronize && !empty($remote_groupings)) {
+            foreach ($remote_groupings_groups AS $r_grouping) {
+                if ($remote_groupings[$r_grouping->id]->localid) {
+                    foreach ($r_grouping->groups AS $r_group) {
+                        if ($remote_groups[$r_group->id]->localid) {
+                            groups_assign_grouping($remote_groupings[$r_grouping->id]->localid, $remote_groups[$r_group->id]->localid);
+                        }
                     }
                 }
             }

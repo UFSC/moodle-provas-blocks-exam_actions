@@ -95,7 +95,7 @@ if ($synchronize) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('sync_groups_title', 'block_exam_actions') . $OUTPUT->help_icon('sync_groups', 'block_exam_actions'));
+echo $OUTPUT->heading(get_string('sync_groups_title', 'block_exam_actions') . $OUTPUT->help_icon('sync_groups', 'block_exam_actions'), 3);
 
 if ($message) {
     echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');

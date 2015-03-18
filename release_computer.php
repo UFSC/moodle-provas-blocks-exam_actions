@@ -63,6 +63,19 @@ if ($key = optional_param('key', false, PARAM_TEXT)) {
     $PAGE->set_pagelayout('standard');
     $PAGE->navbar->add(get_string('release_computer', 'block_exam_actions'));
 
+    if (isloggedin()) {
+        echo $OUTPUT->header();
+        echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
+
+        $cancel_url = new moodle_url('/my');
+        $logout_url = new moodle_url('/login/logout.php');
+        echo $OUTPUT->confirm(get_string('must_logout', 'block_exam_actions'), $logout_url, $cancel_url);
+
+        echo $OUTPUT->box_end();
+        echo $OUTPUT->footer();
+        exit;
+    }
+
     $editform = new release_computer_form();
     if ($editform->is_cancelled()) {
         redirect($returnurl);
@@ -70,7 +83,7 @@ if ($key = optional_param('key', false, PARAM_TEXT)) {
         $key = $data->access_key;
     } else {
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string('release_this_computer', 'block_exam_actions'));
+        echo $OUTPUT->heading(get_string('release_this_computer', 'block_exam_actions'), 3);
         echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthnormal');
         $editform->display();
         echo $OUTPUT->box_end();

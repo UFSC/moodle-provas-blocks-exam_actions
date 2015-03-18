@@ -76,7 +76,7 @@ $PAGE->navbar->add(get_string('remote_courses', 'block_exam_actions'));
 echo $OUTPUT->header();
 
 if ($add) {
-    echo $OUTPUT->heading(get_string('enablecourse', 'block_exam_actions', format_string($shortname)));
+    echo $OUTPUT->heading(get_string('enablecourse', 'block_exam_actions', format_string($shortname)), 3);
     $yesurl = new moodle_url('/blocks/exam_actions/remote_courses.php',
                     array('identifier'=>urlencode($identifier), 'shortname'=>urlencode($shortname) ,'confirmadd'=>1,'sesskey'=>sesskey()));
     $message = get_string('confirmenablecourse', 'block_exam_actions', $shortname);
@@ -85,7 +85,7 @@ if ($add) {
     exit;
 }
 
-echo $OUTPUT->heading(get_string('remote_courses', 'block_exam_actions'));
+echo $OUTPUT->heading(get_string('remote_courses', 'block_exam_actions'), 3);
 echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
 echo get_string('remote_courses_msg', 'block_exam_actions');
 

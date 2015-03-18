@@ -87,7 +87,7 @@ foreach ($customfields AS $f=>$name) {
 
 $table->data = $data;
 
-echo $OUTPUT->heading(get_string('sync_students_title', 'block_exam_actions'));
+echo $OUTPUT->heading(get_string('sync_students_title', 'block_exam_actions'), 3);
 
 echo html_writer::start_tag('DIV', array('class'=>'exam_box'));
 echo html_writer::table($table);

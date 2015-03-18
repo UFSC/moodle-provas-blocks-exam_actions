@@ -89,7 +89,7 @@ if (optional_param('export', false, PARAM_TEXT)) {
         }
     }
 
-    echo $OUTPUT->heading(get_string('export_result', 'block_exam_actions'));
+    echo $OUTPUT->heading(get_string('export_result', 'block_exam_actions'), 3);
     echo html_writer::start_tag('DIV', array('align'=>'center'));
     $table = new html_table();
     $table->head  = array(get_string('activity'),
@@ -99,15 +99,15 @@ if (optional_param('export', false, PARAM_TEXT)) {
     echo html_writer::table($table);
     echo html_writer::end_tag('DIV');
 } else {
-    echo $OUTPUT->heading(get_string('export_exam_title', 'block_exam_actions', $identifier));
+    echo $OUTPUT->heading(get_string('export_exam_title', 'block_exam_actions', $identifier), 3);
     echo html_writer::start_tag('DIV', array('class'=>'exam_box exam_list'));
 
     if (empty($activities)) {
         echo $OUTPUT->box_start('generalbox boxaligncenter');
-        echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 4);
+        echo $OUTPUT->heading(get_string('no_activities_to_export', 'block_exam_actions'), 3);
         echo $OUTPUT->box_end();
     } else {
-        echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 4);
+        echo $OUTPUT->heading(get_string('export_exam_desc', 'block_exam_actions'), 3);
         echo html_writer::start_tag('form', array('method'=>'post', 'action'=>$baseurl));
         echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'courseid', 'value'=>$courseid));
 
