@@ -55,12 +55,14 @@ Pós-instalação
 
 Após instalar o módulo, execute as seguinte ações:
 
-* Incluir instância do bloco 'exam_actions' na tela inicial do ambiente (Site home)
- * Necessário para que esteja disponível a ação de "Liberar computador para realizar prova"
+* Incluir instância do bloco "Moodle Provas" na "Página inicial do site" (necessário para que esteja disponível a ação de "Liberar computador para realizar prova)"
+* Incluir instância do bloco intitulado "Cursos" na página inicial do usuário (Minha página inicial padrão) para que ao entrar o usuário veja a lista de cursos nos quais ele está inscrito
 * Incluir no arquivo config.php a linha:
  * $CFG->defaultblocks_override = ':exam_actions';
  * Para que seja automaticamente adicionado este bloco em cada curso Moodle que seja criado.
  * Necessário para que estejam disponíveis diversas ações em nível de curso
+* Ajustar as configurações do módulo local-exam_authorization, em particular as instalações remotas de Moodle integradas ao Moodle Provas
+* Alterar configurações do Moodle Provas de forma a ajustá-lo às necessidades da instituição
 
 Licença
 =======
