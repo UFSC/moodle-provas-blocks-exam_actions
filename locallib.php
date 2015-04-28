@@ -290,25 +290,27 @@ function exam_mount_category_tree($username) {
                 }
                 unset($c->functions);
             }
-            $cats = exam_get_remote_categories($identifier, array_keys($rcourses));
-            foreach ($cats AS $catid => $cat) {
-                $cat->sub = array();
-                $cat->courses = isset($rcourses[$catid]) ? $rcourses[$catid] : array();
-            }
-            foreach ($cats AS $catid => $cat) {
-                $size = count($cat->path);
-                if ($size > 1) {
-                    $fatherid = $cat->path[$size-2];
-                    $cats[$fatherid]->sub[$catid] = $cat;
+            if (!empty($rcourses)) {
+                $cats = exam_get_remote_categories($identifier, array_keys($rcourses));
+                foreach ($cats AS $catid => $cat) {
+                    $cat->sub = array();
+                    $cat->courses = isset($rcourses[$catid]) ? $rcourses[$catid] : array();
                 }
-            }
-            foreach (array_keys($cats) AS $catid) {
-                $cat = $cats[$catid];
-                if (count($cats[$catid]->path) > 1) {
-                    unset($cats[$catid]);
+                foreach ($cats AS $catid => $cat) {
+                    $size = count($cat->path);
+                    if ($size > 1) {
+                        $fatherid = $cat->path[$size-2];
+                        $cats[$fatherid]->sub[$catid] = $cat;
+                    }
                 }
+                foreach (array_keys($cats) AS $catid) {
+                    $cat = $cats[$catid];
+                    if (count($cats[$catid]->path) > 1) {
+                        unset($cats[$catid]);
+                    }
+                }
+                $tree[$identifier] = $cats;
             }
-            $tree[$identifier] = $cats;
         }
     }
     return $tree;
