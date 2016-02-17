@@ -35,23 +35,36 @@ require_once(dirname(__FILE__).'/release_computer_form.php');
 $baseurl = new moodle_url('/blocks/exam_actions/release_computer.php');
 $returnurl = new moodle_url('/');
 
+$key = optional_param('key', '', PARAM_TEXT);
+
 if (!\local_exam_authorization\authorization::check_ip_header(false) || !\local_exam_authorization\authorization::check_network_header(false)) {
+    \local_exam_authorization\authorization::add_to_log($key, 0, 'cd_needed');
     print_error('cd_needed', 'block_exam_actions', $returnurl);
 }
 if (!\local_exam_authorization\authorization::check_version_header(false)) {
+    \local_exam_authorization\authorization::add_to_log($key, 0, 'invalid_cd_version');
     print_error('invalid_cd_version', 'block_exam_actions', $returnurl);
 }
 
 if (!\local_exam_authorization\authorization::check_ip_range_student(false)) {
+    \local_exam_authorization\authorization::add_to_log($key, 0, 'out_of_student_ip_ranges');
     print_error('out_of_student_ip_ranges', 'block_exam_actions', $returnurl);
 }
 
-if ($key = optional_param('key', false, PARAM_TEXT)) {
+if (!empty($key)) {
     if (!$access_key = $DB->get_record('exam_access_keys', array('access_key' => $key))) {
+        \local_exam_authorization\authorization::add_to_log($key, 0, 'access_key_unknown');
         print_error('access_key_unknown', 'block_exam_actions');
     }
     if ($access_key->timecreated + $access_key->timeout*60 < time()) {
+        \local_exam_authorization\authorization::add_to_log($key, 0, 'access_key_timedout');
         print_error('access_key_timedout', 'block_exam_actions');
+    }
+    try {
+        \local_exam_authorization\authorization::check_client_host($access_key);
+    } catch (Exception $e) {
+        \local_exam_authorization\authorization::add_to_log($key, 0, $e->getMessage());
+        print_error($e->getMessage(), 'local_exam_authorization', $returnurl);
     }
 } else {
     $site = get_site();

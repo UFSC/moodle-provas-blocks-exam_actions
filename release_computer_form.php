@@ -54,12 +54,19 @@ class release_computer_form extends moodleform {
 
         $errors = parent::validation($data, $files);
 
-        if ($access_key = $DB->get_record('exam_access_keys', array('access_key' => $data['access_key']))) {
-            if ($access_key->timecreated + $access_key->timeout*60 < time()) {
-                $errors['access_key'] = get_string('access_key_timedout', 'block_exam_actions');
-            }
-        } else {
+        if (!$access_key = $DB->get_record('exam_access_keys', array('access_key' => $data['access_key']))) {
             $errors['access_key'] = get_string('access_key_unknown', 'block_exam_actions');
+            \local_exam_authorization\authorization::add_to_log($data['access_key'], 0, 'access_key_unknown');
+        } else if ($access_key->timecreated + $access_key->timeout*60 < time()) {
+             $errors['access_key'] = get_string('access_key_timedout', 'block_exam_actions');
+             \local_exam_authorization\authorization::add_to_log($data['access_key'], 0, 'access_key_timedout');
+        } else {
+            try {
+                \local_exam_authorization\authorization::check_client_host($access_key);
+            } catch (Exception $e) {
+                $errors['access_key'] =  get_string($e->getMessage(), 'local_exam_authorization');
+                \local_exam_authorization\authorization::add_to_log($data['access_key'], 0, $e->getMessage());
+            }
         }
 
         return $errors;

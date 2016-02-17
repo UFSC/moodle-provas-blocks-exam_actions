@@ -75,12 +75,12 @@ case 'generated_access_keys':
               FROM {exam_access_keys} ak
               JOIN {user} u ON (u.id = ak.userid)
              WHERE ak.courseid = :courseid
-          ORDER BY ak.timecreated";
+          ORDER BY ak.timecreated DESC";
     $recs = $DB->get_records_sql($sql, array('courseid'=>$courseid));
     $data = array();
     foreach ($recs AS $rec) {
-        $data[] = array($rec->access_key,
-                        userdate($rec->timecreated),
+        $data[] = array(userdate($rec->timecreated),
+                        $rec->access_key,
                         $rec->firstname.' '.$rec->lastname,
                         $rec->ip,
                         $rec->timeout . ' ' . ($rec->timeout == 1 ? get_string('minute') : get_string('minutes')),
@@ -89,8 +89,8 @@ case 'generated_access_keys':
     }
 
     $table = new html_table();
-    $table->head  = array(get_string('access_key', 'block_exam_actions'),
-                          get_string('createdon', 'block_exam_actions'),
+    $table->head  = array(get_string('createdon', 'block_exam_actions'),
+                          get_string('access_key', 'block_exam_actions'),
                           get_string('createdby', 'block_exam_actions'),
                           get_string('real_ipaddress', 'block_exam_actions'),
                           get_string('access_key_timeout', 'block_exam_actions'),
@@ -100,26 +100,27 @@ case 'generated_access_keys':
     break;
 
 case 'used_access_keys':
-    $order_options = array('used_by'=>'u.firstname, u.lastname, akl.time',
-                           'used_time'=>'akl.time, u.firstname, u.lastname',
+    $order_options = array('used_time'=>'akl.time DESC, u.firstname, u.lastname',
+                           'used_by'=>'u.firstname, u.lastname, akl.time',
                            'access_key'=>'akl.access_key, akl.time',
                            'real_ipaddress'=>'akl.ip, akl.time');
     $order = optional_param('order', '' , PARAM_TEXT);
-    $orderby = isset($order_options[$order]) ? $order_options[$order] : $order_options['used_by'];
+    $orderby = isset($order_options[$order]) ? $order_options[$order] : $order_options['used_time'];
 
-    $sql = "SELECT akl.*, u.firstname, lastname
+    $sql = "SELECT akl.*, ak.ip as ip_generated, u.firstname, lastname
               FROM {exam_access_keys_log} akl
               JOIN {exam_access_keys} ak ON (ak.access_key = akl.access_key)
-              JOIN {user} u ON (u.id = akl.userid)
+         LEFT JOIN {user} u ON (u.id = akl.userid)
              WHERE ak.courseid = :courseid
           ORDER BY {$orderby}";
     $recs = $DB->get_records_sql($sql, array('courseid'=>$courseid, 'contextlevel'=>CONTEXT_COURSE));
     $data = array();
     foreach ($recs AS $rec) {
-        $data[] = array($rec->firstname.' '.$rec->lastname,
-                        userdate($rec->time),
+        $data[] = array(userdate($rec->time),
+                        $rec->firstname.' '.$rec->lastname,
                         $rec->access_key,
                         $rec->ip,
+                        $rec->ip_generated,
                         $rec->header_version,
                         $rec->header_ip,
                         $rec->header_network,
@@ -134,6 +135,7 @@ case 'used_access_keys':
         $url->param('order', $cmp);
         $head[] = html_writer::link($url, get_string($cmp, 'block_exam_actions'));
     }
+    $head[] = get_string('real_ipaddress_generated', 'block_exam_actions');
     $head[] = get_string('header_version', 'block_exam_actions');
     $head[] = get_string('header_ip', 'block_exam_actions');
     $head[] = get_string('header_network', 'block_exam_actions');

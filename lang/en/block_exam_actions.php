@@ -122,6 +122,7 @@ $string['header_version'] = 'Versão do CD';
 $string['header_ip'] = 'Endereço IP local';
 $string['header_network'] = 'Endereço de Rede local';
 $string['real_ipaddress'] = 'Endereço IP real';
+$string['real_ipaddress_generated'] = 'Endereço IP de geração';
 
 $string['verify_client_host'] = 'Restrigir uso à rede local';
 $string['verify_client_host_help'] = 'Verificar se o computador onde será utilizada a chave de acesso está na mesma rede do computador onde a chave foi gerada.';

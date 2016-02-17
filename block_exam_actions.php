@@ -92,12 +92,12 @@ class block_exam_actions extends block_base {
                                                  get_string('sync_groups', 'block_exam_actions'));
                 }
                 $conduct = false;
-                if ((has_capability('block/exam_actions:conduct_exam', $PAGE->context) && $PAGE->course->visible)) {
+                if (has_capability('block/exam_actions:conduct_exam', $PAGE->context) && $PAGE->course->visible) {
                     $links[1] = html_writer::link(new moodle_url('/blocks/exam_actions/generate_access_key.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('generate_access_key', 'block_exam_actions'));
                     $conduct = true;
                 }
-                if ((has_capability('block/exam_actions:monitor_exam', $PAGE->context) && $PAGE->course->visible)) {
+                if (has_capability('block/exam_actions:monitor_exam', $PAGE->context)) {
                     $links[2] = html_writer::link(new moodle_url('/blocks/exam_actions/monitor_exam.php', array('courseid'=>$PAGE->context->instanceid)),
                                                  get_string('monitor_exam', 'block_exam_actions'));
                 }
